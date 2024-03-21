@@ -12,3 +12,7 @@ If you have any questions or need further information, please feel free to reach
 
 - Email: deckergame.danny@gmail.com
 - Discord: danny0897
+
+# Special Thanks
+
+A big thank you to **taercy** and **max uwu** for their contributions to this project. Your help and support have been invaluable!
