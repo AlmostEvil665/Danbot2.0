@@ -15,4 +15,4 @@ If you have any questions or need further information, please feel free to reach
 
 # Special Thanks
 
-A big thank you to **taercy** and **max uwu** for their contributions to this project. Your help and support have been invaluable!
+A big thank you to **Taercy** and **Max uwu** for their contributions to this project. Your help and support have been invaluable!
