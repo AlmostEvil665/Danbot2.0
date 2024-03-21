@@ -347,7 +347,11 @@ async def default(ctx: discord.ApplicationContext):
 @bot.event
 async def on_message(message: Message) -> None:
     if message.author.bot and message.author.name == "Captain Hook":
-        image_link = message.embeds[0].image.url
+        try:
+            image_link = message.embeds[0].image.url
+        except:
+            print("No image url provided. Skipping this hook callback")
+            return
         message_data = message.embeds[0].description.split('\n')
         hook_type, player_name, player = message_data[0], message_data[1], bingo.get_player(message_data[1])
         if player is None:
