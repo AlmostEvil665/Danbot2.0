@@ -169,7 +169,7 @@ class Bingo:
         self.game_tiles = {}
         self.requests = []
 
-    def new_request(self, tile_name, team_name,player_name, proof_url):
+    def new_request(self, tile_name, team_name, player_name, proof_url):
         self.requests.append(Request(self.game_tiles[tile_name.lower()], self.teams[team_name.lower()], player_name, proof_url))
 
     def new_team(self, name):

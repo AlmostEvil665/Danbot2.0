@@ -87,14 +87,57 @@ async def new_player(ctx: discord.ApplicationContext,
     except KeyError as e:
         await ctx.respond("Please input a valid team name")
 
-@bot.slash_command(name="submit_tile", description="Submit evidence for a niche tile. Attach the image to this command")
-async def submit_tile(ctx: discord.ApplicationContext,
-                      team_name: discord.Option(str, "What team are you on?", autocomplete=discord.utils.basic_autocomplete(team_names)),
-                      tile_name: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
-                      player_name: discord.Option(str, "What is the player name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
-                      proof_url: discord.Option(str, "Copy a message link or image link to the proof you have of completing the tile")):
-    bingo.new_request(tile_name, team_name, player_name, proof_url)
-    await ctx.respond(f"Your request has been received. An officer will get back to you soon!")
+class SubmitRequestModal(discord.ui.Modal):
+    def __init__(self, image, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.image = image
+
+        self.add_item(discord.ui.InputText(label="Player name:"))
+        self.add_item(discord.ui.InputText(label="Team name:"))
+        self.add_item(discord.ui.InputText(label="Tile name:"))
+
+    async def callback(self, interaction: discord.Interaction):
+        embed = discord.Embed(title="Confirm request")
+        embed.add_field(name="Tile Name", value=self.children[2].value)
+        embed.add_field(name="Team Name", value=self.children[1].value)
+        embed.add_field(name="Player Name", value=self.children[0].value)
+        embed.set_image(url=self.image)
+        await interaction.response.send_message(embed=embed, view=SubmitRequestView(bot, self.children[0].value, self.children[1].value, self.children[2].value, self.image))
+
+class SubmitRequestView(discord.ui.View):
+    def __init__(self, bot, player_name, team_name, tile_name, image):
+        super().__init__()
+        self.bot = bot
+        self.image = image
+        self.player_name = player_name
+        self.team_name = team_name
+        self.tile_name = tile_name
+
+    @discord.ui.button(label="Yes", row=0, style=discord.ButtonStyle.primary)
+    async def first_button_callback(self, button, interaction):
+        self.disable_all_items()
+        try:
+            if self.player_name.lower() not in bingo.get_player_names(): await interaction.response.edit_message(content=f"Unknown value {self.player_name} :x: ", view=None, embed=None)
+            bingo.new_request(self.tile_name, self.team_name, self.player_name, self.image)
+            button.label = "Your request has been submitted"
+            await interaction.response.edit_message(content=f"Your request has been submitted :white_check_mark:\nAn officer will review it soon", view=None, embed= None)
+        except Exception as e:
+            await interaction.response.edit_message(content=f"Unknown value {e.args[0]} :x: ", view=None, embed=None)
+
+    @discord.ui.button(label="No", row=0, style=discord.ButtonStyle.danger)
+    async def second_button_callback(self, button, interaction):
+        self.disable_all_items()
+        button.label = "Request closed"
+        await interaction.response.edit_message(view=self)
+
+
+@bot.message_command(name="submit_tile")
+async def submit_tile_request(ctx, message: discord.Message):
+    if message.attachments:
+        modal = SubmitRequestModal(message.attachments[0], title="Submit Tile Request")
+        await ctx.send_modal(modal)
+    else:
+        image = "No image found"
 
 
 class RequestView(discord.ui.View):
@@ -107,15 +150,20 @@ class RequestView(discord.ui.View):
     async def first_button_callback(self, button, interaction):
         embed = bingo.award_tile(self.request.tile.name, self.request.team.name, self.request.player_name)
         channel = self.bot.get_channel(self.request.team.channel)
-        await channel.send("Your request was approved!", embed=embed)
-        await interaction.response.send_message("You approved the request")
+        self.disable_all_items()
+        await interaction.response.edit_message(content=f"You approved the request :white_check_mark:", embed=None, view=None)
+        await channel.send("Your request was approved!", embed=embed, view=None)
 
     @discord.ui.button(label="Reject", row=0, style=discord.ButtonStyle.danger)
     async def second_button_callback(self, button, interaction):
-        await interaction.response.send_message("You rejected the request")
+        button.disabled = True
+        self.disable_all_items()
+        await interaction.response.edit_message(content="You rejected the request", embed=None, view=None)
+        await interaction.response.send_message("You rejected the request :x: ")
 
 
 @bot.slash_command(name="requests", description="Check if any requests need to be verified")
+@default_permissions(manage_webhooks=True)
 async def requests(ctx: discord.ApplicationContext):
     if len(bingo.requests) > 0:
         request = bingo.requests.pop()
