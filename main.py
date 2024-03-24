@@ -270,6 +270,8 @@ async def leaderboard(ctx: discord.ApplicationContext):
         spaces_needed = 60 - len(f"Rank {i}: {team.name[:40]}") - len(f"{team.points} points ({utils.int_to_gp(team.gp_gained)})")
         # Create the string
         result = f"Rank {i}: {team.name[:40]}{' ' * spaces_needed}{team.points} points ({utils.int_to_gp(team.gp_gained)})\n"
+        if len(rankings) + len(result) > 1021:
+            break
         rankings += result
     rankings += "```"
     embed.add_field(name="Rankings", value=rankings, inline=False)
@@ -278,9 +280,9 @@ async def leaderboard(ctx: discord.ApplicationContext):
     for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
         spaces_needed = 60 - len(f"Rank {i}: {player.name[:40]}") - len(f"{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})")
         result = f"Rank {i}: {player.name[:40]}{' ' * spaces_needed}{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})\n"
-        player_rankings += result
-        if i >= 10:
+        if len(player_rankings) + len(result) > 1021:
             break
+        player_rankings += result
 
     player_rankings += "```"
     embed.add_field(name="Player Rankings", value=player_rankings, inline=False)
@@ -306,8 +308,10 @@ async def player(ctx: discord.ApplicationContext,
     drop_rankings = "```\n"
     sorted_drops = sorted(player.drops.items(), key=lambda item: item[1][1], reverse=True)
     for key, value in sorted_drops:
-        spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])}")
-        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])}\n"
+        spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])})")
+        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])})\n"
+        if len(drop_rankings) + len(result) > 1021:
+            break
         drop_rankings += result
     drop_rankings += "```"
     embed.add_field(name="Drops", value=drop_rankings, inline=False)
@@ -318,7 +322,10 @@ async def player(ctx: discord.ApplicationContext,
     for key, value in sorted_kc:
         spaces_needed = 60 - len(f"{key}{value}")
         result = f"{key}{' ' * spaces_needed}{value}\n"
+        if len(kc_rankings) + len(result) > 1021:
+            break
         kc_rankings += result
+
     kc_rankings += "```"
     embed.add_field(name="Kill count", value=kc_rankings, inline=False)
 
