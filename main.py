@@ -253,6 +253,42 @@ async def set_team_channel(ctx: discord.ApplicationContext,
                              "Welcome to the bingo! Type /help for a list of cool and useful commands")
 
 
+async def send_large_message(ctx, result):
+    while len(result) > 500:
+        # Find the last newline character within the first 2000 characters
+        split_index = result[:500].rfind('\n')
+
+        # If there's no newline character, just split at the 2000th character
+        if split_index == -1:
+            split_index = 500
+
+        # Send the chunk and remove it from the result string
+        await ctx.send(result[:split_index])
+        result = result[split_index:].lstrip('\n')  # remove leading newline characters
+
+    # Send any remaining part of the string
+    if result:
+        await ctx.send(result)
+
+@bot.slash_command(name="board", description="See the bingo board for your team")
+async def board(ctx: discord.ApplicationContext,
+                team_name: discord.Option(str, "Which teams board would you like to see?", autocomplete=team_names)):
+    result_str = ""
+    for tile in bingo.game_tiles.values():
+        tile_data = tile.name + " - "
+        for i in range(min(tile.completion_count[team_name.lower()], tile.recurrence)):
+            tile_data = tile_data + ":white_check_mark:"
+        for i in range(0, tile.recurrence - tile.completion_count[team_name.lower()]):
+            tile_data = tile_data + ":x:"
+        tile_data = tile_data + "\n"
+        result_str = result_str + tile_data
+    await ctx.respond("## Bingo Board\n")
+    await send_large_message(ctx, result_str)
+
+
+
+
+
 @bot.slash_command(name="leaderboard", description="Get the leaderboards / rankings of all the teams")
 async def leaderboard(ctx: discord.ApplicationContext):
     # Create a new Embed object
@@ -352,6 +388,8 @@ async def team(ctx: discord.ApplicationContext,
     for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
         spaces_needed = 60 - len(f"Rank {i}: {player.name[:40]}") - len(f"{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})")
         result = f"Rank {i}: {player.name[:40]}{' ' * spaces_needed}{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})\n"
+        if len(player_rankings) + len(result) > 1021:
+            break
         player_rankings += result
     player_rankings += "```"
     embed.add_field(name="Player Rankings", value=player_rankings, inline=False)
@@ -362,7 +400,10 @@ async def team(ctx: discord.ApplicationContext,
     for key, value in sorted_drops:
         spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])}")
         result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])}\n"
+        if len(drop_rankings) + len(result) > 1021:
+            break
         drop_rankings += result
+
     drop_rankings += "```"
     embed.add_field(name="Drops", value=drop_rankings, inline=False)
 
@@ -372,6 +413,8 @@ async def team(ctx: discord.ApplicationContext,
     for key, value in sorted_kc:
         spaces_needed = 60 - len(f"{key}{value}")
         result = f"{key}{' ' * spaces_needed}{value}\n"
+        if len(kc_rankings) + len(result) > 1021:
+            break
         kc_rankings += result
     kc_rankings += "```"
     embed.add_field(name="Kill count", value=kc_rankings, inline=False)
@@ -394,7 +437,7 @@ async def default(ctx: discord.ApplicationContext):
     await new_player(ctx, "Ahyrexx", "uwu")
     await new_player(ctx, "Toortles", "uwu")
     await new_player(ctx, "Max uwu", "uwu")
-    await add_collection_tile(ctx, "Ardy Coll", "Iron bolts/Iron dagger,Coins", 5, 100)
+    await add_collection_tile(ctx, f"Ardy Coll", "Iron bolts/Iron dagger, Coins", 5, 3)
     await add_drop_tile(ctx, "Thieving Tile", "Coin pouch", 5, 2)
     await add_kc_tile(ctx, "Boss", "Scurrius", 5, 1, 3)
     await add_niche_tile(ctx, "A Test Niche Tile", 5, 1)
