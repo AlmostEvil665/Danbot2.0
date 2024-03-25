@@ -2,7 +2,7 @@ import random
 import discord
 from discord import default_permissions, Message
 import utils
-import bingo
+import bingo as bingo_class
 import re
 import json
 
@@ -15,7 +15,8 @@ intents.messages = True
 intents.typing = True
 intents.message_content = True
 bot = discord.Bot(intents=intents)
-bingo = bingo.Bingo()
+bingo = bingo_class.Bingo()
+BINGO_TRACKING = True
 
 bot.guilds.append(369695042740420608)
 bot.guilds.append(1216228320807485511)
@@ -65,6 +66,27 @@ async def sync(ctx: discord.AutocompleteContext):
     await bot.sync_commands()
     await ctx.respond("Forcing command sync")
 
+
+@bot.slash_command(name="bingo_start", description="Start tracking player data for the bingo")
+@default_permissions(manage_webhooks=True)
+async def bingo_start(ctx: discord.AutocompleteContext):
+    global BINGO_TRACKING
+    BINGO_TRACKING = True
+    await ctx.respond("Bingo tracking started...")
+
+@bot.slash_command(name="bingo_reset", description="Resets ALL bingo data. Tiles, players, teams, points, etc will be wiped!")
+@default_permissions(manage_webhooks=True)
+async def bingo_start(ctx: discord.AutocompleteContext):
+    global bingo
+    bingo = bingo_class.Bingo()
+    await ctx.respond("Bingo data reset...")
+
+@bot.slash_command(name="bingo_stop", description="Stop tracking player data for the bingo")
+@default_permissions(manage_webhooks=True)
+async def bingo_stop(ctx: discord.AutocompleteContext):
+    global BINGO_TRACKING
+    BINGO_TRACKING = False
+    await ctx.respond("Bingo tracking stopped...")
 
 @bot.slash_command(name="add_team", description="Adds a new team to the bingo!")
 @default_permissions(manage_webhooks=True)
@@ -495,7 +517,7 @@ async def default(ctx: discord.ApplicationContext):
 
 @bot.event
 async def on_message(message: Message) -> None:
-    if message.author.bot and message.author.name == "Captain Hook":
+    if message.author.bot and message.author.name == "Captain Hook" and BINGO_TRACKING:
         try:
             image_link = message.embeds[0].image.url
         except:
