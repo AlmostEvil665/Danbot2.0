@@ -240,10 +240,61 @@ async def add_collection_tile(ctx: discord.ApplicationContext,
     await ctx.respond("Collection tile added!")
 
 
+@bot.slash_command(name="award_tile", description="Awards a team and player a tile incase I made a mistake")
+@default_permissions(manage_webhooks=True)
+async def award_tile(ctx: discord.ApplicationContext,
+                     tile_name: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
+                     team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+                     player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names))):
+    embed = bingo.award_tile(tile_name, team_name, player_name)
+    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].channel)
+    await channel.send(embed=embed)
+    await ctx.respond("Tile awarded! Check their team channel to make sure they got the points")
+
+
+@bot.slash_command(name="unaward_tile", description="Remove a tile completion and the points from a team incase I made a mistake")
+@default_permissions(manage_webhooks=True)
+async def unaward_tile(ctx: discord.ApplicationContext,
+                       tile_name: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
+                       team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+                       player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names))):
+    try:
+        bingo.unaward_tile(tile_name, team_name, player_name)
+        await ctx.respond("If you are unawarding a tile due to a technical error on the bots side please direct message danbis and explain what happened. I have **NOT** notified the team they lost this tile as it is probably best for you to explain what happened.")
+    except Exception as e:
+        await ctx.respond(f"I ran into an error trying to unaward this tile. Here's a bunch of nonsense you should send to danbis.\n{e}")
+
+@bot.slash_command(name="award_points", description="Award points to a given team (and optionally specific player)")
+@default_permissions(manage_webhooks=True)
+async def award_points(ctx: discord.ApplicationContext,
+                       team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+                       points: discord.Option(int, description="How many points are you awarding?"),
+                       player_name: discord.Option(str, default="", description="What is the players name?",
+                                                   autocomplete=discord.utils.basic_autocomplete(player_names)),
+                       ):
+    if player_name != "":
+        bingo.teams[team_name.lower()].members[player_name.lower()].points_gained += points
+    bingo.teams[team_name.lower()].points += points
+    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].channel)
+    await channel.send(f"Congratulations {team_name}, you have been awarded {points} points by leadership!")
+    await ctx.respond(f"Awarded {team_name} {points} points!")
+
+@bot.slash_command(name="unaward_points", description="Remove points from a team (and optionally a specific player)")
+@default_permissions(manage_webhooks=True)
+async def unaward_points(ctx:discord.ApplicationContext,
+                         team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+                         points: discord.Option(int, description="How many points are you awarding?"),
+                         player_name: discord.Option(str, default="", description="What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
+                         ):
+    if player_name != "":
+        bingo.teams[team_name.lower()].members[player_name.lower()].points_gained -= points
+    bingo.teams[team_name.lower()].points -= points
+    await ctx.respond(f"We removed {team_name}'s points but we think it's best you explain to them why this happened. If this was a technical failure on the bot's side please message danbis and explain what happened")
+
 @bot.slash_command(name="set_team_channel", description="Sets the text channel for any given team")
 @default_permissions(manage_webhooks=True)
 async def set_team_channel(ctx: discord.ApplicationContext,
-                           team_name: discord.Option(str, "What team are we setting the team channel for?", autocomplete=team_names),
+                           team_name: discord.Option(str, "What team are we setting the team channel for?", autocomplete=discord.utils.basic_autocomplete(team_names)),
                            channel_id: discord.Option(int, "Copy and paste the Channel ID here", autocomplete=discord.utils.basic_autocomplete(channel_ids))
                            ):
     team = bingo.teams[team_name.lower()]

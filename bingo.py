@@ -229,6 +229,16 @@ class Bingo:
     def delete_tile(self, name):
         del self.game_tiles[name.lower()]
 
+    def unaward_tile(self, tile_name:str, team_name:str, player_name:str):
+        tile = self.game_tiles[tile_name.lower()]
+        team = self.teams[team_name.lower()]
+        player = team.members[player_name.lower()]
+
+        player.points_gained = player.points_gained - tile.points
+        team.points = team.points - tile.points
+        tile.completion_count[team.name.lower()] = tile.completion_count[team.name.lower()] - 1
+
+
     def award_tile(self, tile_name: str, team_name: str, player_name: str):
         try:
             tile = self.game_tiles[tile_name.lower()]
@@ -251,10 +261,11 @@ class Bingo:
                 if type(tile) is not NicheTile:
                     image_urls = player.team.get_images(tile)
 
-                    embed.set_image(url=image_urls[0])
-                    if type(tile) is not KcTile:
-                        embed.add_field(name="All images",
-                                        value=str(image_urls).replace('\'', '').replace('[', '').replace(']', ''))
+                    if len(image_urls) > 0:
+                        embed.set_image(url=image_urls[0])
+                        if type(tile) is not KcTile:
+                            embed.add_field(name="All images",
+                                            value=str(image_urls).replace('\'', '').replace('[', '').replace(']', ''))
 
                 return embed
             else:
