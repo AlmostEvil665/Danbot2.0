@@ -133,6 +133,22 @@ async def rename_team(ctx: discord.ApplicationContext,
     bingo.teams[new_name.lower()] = team
     await ctx.respond(f"Successfully renamed {old_name} to {new_name}")
 
+@bot.slash_command(name="remove_player", description="Removes a player from the bingo")
+@default_permissions(manage_webhooks=True)
+async def remove_player(ctx: discord.ApplicationContext,
+                        player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names))):
+    player = bingo.get_player(player_name)
+    del player.team.members[player_name.lower()]
+    await ctx.respond(f"Successfully removed {player_name} from the bingo")
+
+
+@bot.slash_command(name="remove_team", description="Removes a team from the bingo")
+@default_permissions(manage_webhooks=True)
+async def remove_team(ctx: discord.ApplicationContext,
+                      team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names))):
+    del bingo.teams[team_name.lower()]
+    await ctx.respond(f"Successfuly removed {team_name} from the bingo")
+
 class SubmitRequestModal(discord.ui.Modal):
     def __init__(self, image, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
