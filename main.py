@@ -401,7 +401,7 @@ async def unaward_points(ctx:discord.ApplicationContext,
 @default_permissions(manage_webhooks=True)
 async def set_team_channel(ctx: discord.ApplicationContext,
                            team_name: discord.Option(str, "What team are we setting the team channel for?", autocomplete=discord.utils.basic_autocomplete(team_names)),
-                           channel_id: discord.Option(int, "Copy and paste the Channel ID here", autocomplete=discord.utils.basic_autocomplete(channel_ids))
+                           channel_id: discord.Option(str, description="Copy and paste the Channel ID here")
                            ):
     team = bingo.teams[team_name.lower()]
     team.set_channel(channel_id)
