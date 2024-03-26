@@ -10,6 +10,9 @@ def debug_print(obj):
     pp.pprint(obj)
 
 
+def defaultdict_int():
+    return defaultdict(int)
+
 class CollectionTile:
     def __init__(self, name: str, points: float, recurrence: int, collection: list[str]):
         self.name = name
@@ -17,7 +20,7 @@ class CollectionTile:
         self.recurrence = recurrence
         self.collection = collection
         self.completion_count = defaultdict(int)
-        self.team_drops = defaultdict(lambda: defaultdict(int))
+        self.team_drops = defaultdict(defaultdict_int)
 
     def is_completed(self, drop_name, player):
         print("Checking copmletion on " + str(drop_name))
@@ -75,6 +78,8 @@ class KcTile:
         return team.killcount[self.boss_name.lower()] >= self.kc_required + self.kc_required * self.completion_count[
             team.name.lower()]
 
+def zero_tuple():
+    return (0, 0)
 
 class Player:
     def __init__(self, name: str, team):
@@ -84,7 +89,9 @@ class Player:
         self.team = team
         self.deaths = 0
         self.killcount = defaultdict(int)
-        self.drops = defaultdict(lambda: (0, 0))
+        self.drops = defaultdict(zero_tuple)
+
+
 
     def add_death(self):
         self.deaths = self.deaths + 1
@@ -106,6 +113,8 @@ class Player:
     def __str__(self):
         return self.name
 
+def defaultdict_liststr():
+    return defaultdict(list[str])
 
 class Team:
     def __init__(self, name: str):
@@ -115,9 +124,9 @@ class Team:
         self.channel = 0
         self.deaths = 0
         self.killcount = defaultdict(int)
-        self.drops = defaultdict(lambda: (0, 0))
+        self.drops = defaultdict(zero_tuple)
         self.gp_gained = 0
-        self.image_urls = defaultdict(lambda: defaultdict(list[str]))
+        self.image_urls = defaultdict(defaultdict_liststr)
 
     def get_images(self, tile):
         if type(tile) is DropTile:

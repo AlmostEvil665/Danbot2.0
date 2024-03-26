@@ -5,6 +5,34 @@ import utils
 import bingo as bingo_class
 import re
 import json
+import pickle
+from discord.ext import tasks, commands
+import datetime
+import asyncio
+
+class MyBot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # The task will start when the bot starts
+        self.my_background_task.start()
+
+    @tasks.loop(hours=1)
+    async def my_background_task(self):
+        # This is the function that will be called every hour
+        with open('bingo.pkl', 'wb') as f:
+            pickle.dump(bingo, f)
+        print(f"Successfully backed up at {datetime.datetime.now()}")
+
+    @my_background_task.before_loop
+    async def before_my_background_task(self):
+        await self.wait_until_ready()  # wait until the bot logs in
+        now = datetime.datetime.now()
+        next_hour = (now.replace(minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1))
+        wait_seconds = (next_hour - now).total_seconds()
+        await asyncio.sleep(wait_seconds)
+
+
 
 with open('config.json') as f:
     config = json.load(f)
@@ -14,7 +42,7 @@ intents = discord.Intents.default()
 intents.messages = True
 intents.typing = True
 intents.message_content = True
-bot = discord.Bot(intents=intents)
+bot = MyBot(intents=intents)
 bingo = bingo_class.Bingo()
 BINGO_TRACKING = True
 
@@ -62,28 +90,44 @@ async def on_ready():
 
 @bot.slash_command(name="sync", description="say hello to the bot")
 @default_permissions(manage_webhooks=True)
-async def sync(ctx: discord.AutocompleteContext):
+async def sync(ctx: discord.ApplicationContext):
     await bot.sync_commands()
     await ctx.respond("Forcing command sync")
+
+@bot.slash_command(name="save", description="Save the current state of the bot")
+@default_permissions(manage_webhooks=True)
+async def save(ctx: discord.ApplicationContext):
+    response = await ctx.respond("Saving bingo...")
+    with open('bingo.pkl', 'wb') as f:
+        pickle.dump(bingo, f)
+    await response.edit_original_response(content="Saved all bingo data!")
+@bot.slash_command(name="load", description="Load the previous state of the bot")
+@default_permissions(manage_webhooks=True)
+async def load(ctx: discord.ApplicationContext):
+    global bingo
+    response = await ctx.respond("Loading bingo...")
+    with open('bingo.pkl', 'rb') as f:
+        bingo = pickle.load(f)
+    await response.edit_original_response(content="Loaded previous bingo data!")
 
 
 @bot.slash_command(name="bingo_start", description="Start tracking player data for the bingo")
 @default_permissions(manage_webhooks=True)
-async def bingo_start(ctx: discord.AutocompleteContext):
+async def bingo_start(ctx: discord.ApplicationContext):
     global BINGO_TRACKING
     BINGO_TRACKING = True
     await ctx.respond("Bingo tracking started...")
 
 @bot.slash_command(name="bingo_reset", description="Resets ALL bingo data. Tiles, players, teams, points, etc will be wiped!")
 @default_permissions(manage_webhooks=True)
-async def bingo_start(ctx: discord.AutocompleteContext):
+async def bingo_start(ctx: discord.ApplicationContext):
     global bingo
     bingo = bingo_class.Bingo()
     await ctx.respond("Bingo data reset...")
 
 @bot.slash_command(name="bingo_stop", description="Stop tracking player data for the bingo")
 @default_permissions(manage_webhooks=True)
-async def bingo_stop(ctx: discord.AutocompleteContext):
+async def bingo_stop(ctx: discord.ApplicationContext):
     global BINGO_TRACKING
     BINGO_TRACKING = False
     await ctx.respond("Bingo tracking stopped...")
