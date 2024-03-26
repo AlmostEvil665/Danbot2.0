@@ -404,7 +404,7 @@ async def set_team_channel(ctx: discord.ApplicationContext,
                            channel_id: discord.Option(str, description="Copy and paste the Channel ID here")
                            ):
     team = bingo.teams[team_name.lower()]
-    team.set_channel(channel_id)
+    team.set_channel(int(channel_id))
     await ctx.respond(f"Set team channel successfuly! Check the team channel for my introduction")
     await utils.send_channel(bot, team.channel,
                              "Welcome to the bingo! Type /help for a list of cool and useful commands")
@@ -526,30 +526,51 @@ async def player(ctx: discord.ApplicationContext,
 
 @bot.slash_command(name="dink", description="Use this command and I'll walk you through setting up the dink plugin!")
 async def dink(ctx: discord.ApplicationContext):
-    await ctx.respond("Check your direct messages! I've sent you step by step instructions to set up the dink plugin.")
-    stepone_image = discord.File("images/dink/step1.png")
-    await ctx.author.send("## Step 1\nInstall the dink plugin", file=stepone_image)
-    await ctx.author.send("## Step 2\nOpen this link: https://github.com/AlmostEvil665/Danbot2.0/blob/main/dink_settings.txt")
-    stepthree_image = discord.File("images/dink/step3.png")
-    await ctx.author.send("## Step 3\nClick \"Copy raw file\"", file=stepthree_image)
-    stepfour_image = discord.File("images/dink/step4.png")
-    await ctx.author.send("## Step 4\nIn game chat type \"::dinkimport\"", file=stepfour_image)
-    stepfive_image = discord.File("images/dink/step5.png")
-    await ctx.author.send("## Step 5\nIn the game chat channel you should see the following message (Note: you do not need to close and open the plugin settings panel despite what the message in chat says)", file=stepfive_image)
-    await ctx.author.send("## Done\nYou should be all set now. If you have any questions reach out to clan leadership")
-
+    try:
+        stepone_image = discord.File("images/dink/step1.png")
+        await ctx.author.send("## Step 1\nInstall the dink plugin", file=stepone_image)
+        await ctx.respond("Check your direct messages!")
+        await ctx.author.send("## Step 2\nOpen this link: https://github.com/AlmostEvil665/Danbot2.0/blob/main/dink_settings.txt")
+        stepthree_image = discord.File("images/dink/step3.png")
+        await ctx.author.send("## Step 3\nClick \"Copy raw file\"", file=stepthree_image)
+        stepfour_image = discord.File("images/dink/step4.png")
+        await ctx.author.send("## Step 4\nIn game chat type \"::dinkimport\"", file=stepfour_image)
+        stepfive_image = discord.File("images/dink/step5.png")
+        await ctx.author.send("## Step 5\nIn the game chat channel you should see the following message (Note: you do not need to close and open the plugin settings panel despite what the message in chat says)", file=stepfive_image)
+        await ctx.author.send("## Done\nYou should be all set now. If you have any questions reach out to clan leadership")
+    except Exception as e:
+        stepone_image = discord.File("images/dink/step1.png")
+        await ctx.respond("## Step 1\nInstall the dink plugin", file=stepone_image)
+        await ctx.respond("## Step 2\nOpen this link: https://github.com/AlmostEvil665/Danbot2.0/blob/main/dink_settings.txt")
+        stepthree_image = discord.File("images/dink/step3.png")
+        await ctx.respond("## Step 3\nClick \"Copy raw file\"", file=stepthree_image)
+        stepfour_image = discord.File("images/dink/step4.png")
+        await ctx.respond("## Step 4\nIn game chat type \"::dinkimport\"", file=stepfour_image)
+        stepfive_image = discord.File("images/dink/step5.png")
+        await ctx.respond("## Step 5\nIn the game chat channel you should see the following message (Note: you do not need to close and open the plugin settings panel despite what the message in chat says)", file=stepfive_image)
+        await ctx.respond("## Done\nYou should be all set now. If you have any questions reach out to clan leadership")
 
 @bot.slash_command(name="submit_a_tile", description="Use this command and I'll walk you through manually submitting a tile for approval")
 async def submit_a_tile(ctx: discord.ApplicationContext):
-    await ctx.respond("Check your direct messages! I've sent you step by step instructions to manually submit a tile")
-    await ctx.author.send("## Step 1\nUpload an image of you completing the tile to your team text channel")
-    step_two_image = discord.File("images/submit/step2.png")
-    await ctx.author.send("## Step 2\nRight click the image, mouse over apps and select \"submit_a_tile\"", file=step_two_image)
-    step_three_image = discord.File("images/submit/step3.png")
-    await ctx.author.send("## Step 3\nFill out the form with your in game name, team name, and the name of the tile. These fields must be exactly correct (not case sensitive)", file=step_three_image)
-    step_four_image = discord.File("images/submit/step4.png")
-    await ctx.author.send("## Step 4\nCheck the confirmation page and if all the data looks correct then click \"Yes\" to send your request to clan leadership.", file=step_four_image)
-    await ctx.author.send("## Step 5\nWait for clan leadership to check your request and approve it")
+    try:
+        await ctx.author.send("## Step 1\nUpload an image of you completing the tile to your team text channel")
+        await ctx.respond("Check your direct messages! I've sent you step by step instructions to manually submit a tile")
+        step_two_image = discord.File("images/submit/step2.png")
+        await ctx.author.send("## Step 2\nRight click the image, mouse over apps and select \"submit_a_tile\"", file=step_two_image)
+        step_three_image = discord.File("images/submit/step3.png")
+        await ctx.author.send("## Step 3\nFill out the form with your in game name, team name, and the name of the tile. These fields must be exactly correct (not case sensitive)", file=step_three_image)
+        step_four_image = discord.File("images/submit/step4.png")
+        await ctx.author.send("## Step 4\nCheck the confirmation page and if all the data looks correct then click \"Yes\" to send your request to clan leadership.", file=step_four_image)
+        await ctx.author.send("## Step 5\nWait for clan leadership to check your request and approve it")
+    except Exception as e:
+        await ctx.respond("## Step 1\nUpload an image of you completing the tile to your team text channel")
+        step_two_image = discord.File("images/submit/step2.png")
+        await ctx.respond("## Step 2\nRight click the image, mouse over apps and select \"submit_a_tile\"", file=step_two_image)
+        step_three_image = discord.File("images/submit/step3.png")
+        await ctx.respond("## Step 3\nFill out the form with your in game name, team name, and the name of the tile. These fields must be exactly correct (not case sensitive)", file=step_three_image)
+        step_four_image = discord.File("images/submit/step4.png")
+        await ctx.respond("## Step 4\nCheck the confirmation page and if all the data looks correct then click \"Yes\" to send your request to clan leadership.", file=step_four_image)
+        await ctx.respond("## Step 5\nWait for clan leadership to check your request and approve it")
 
 @bot.slash_command(name="team", description="Get a bunch of interesting data about a team!")
 async def team(ctx: discord.ApplicationContext,
