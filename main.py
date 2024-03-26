@@ -109,6 +109,30 @@ async def new_player(ctx: discord.ApplicationContext,
     except KeyError as e:
         await ctx.respond("Please input a valid team name")
 
+@bot.slash_command(name="rename_player", description="Renames a player if they performed a name change")
+async def rename_player(ctx: discord.ApplicationContext,
+                        old_name: discord.Option(str, "What is your old username?", autocomplete=discord.utils.basic_autocomplete(player_names)),
+                        new_name: discord.Option(str, "What is your new username")):
+    player = bingo.get_player(old_name)
+    team = player.team
+
+    player.name = new_name
+    del team.members[old_name.lower()]
+    team.members[new_name.lower()] = player
+    await ctx.respond(f"Successfully renamed {old_name} to {new_name}")
+
+@bot.slash_command(name="rename_team", description="Renames a team if they decide they want a different name")
+@default_permissions(manage_webhooks=True)
+async def rename_team(ctx: discord.ApplicationContext,
+                      old_name: discord.Option(str, "What is your old team name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+                      new_name: discord.Option(str, "What is the new team name")):
+    team = bingo.teams[old_name.lower()]
+    team.name = new_name
+
+    del bingo.teams[old_name.lower()]
+    bingo.teams[new_name.lower()] = team
+    await ctx.respond(f"Successfully renamed {old_name} to {new_name}")
+
 class SubmitRequestModal(discord.ui.Modal):
     def __init__(self, image, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
