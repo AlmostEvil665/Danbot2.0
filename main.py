@@ -480,6 +480,32 @@ async def player(ctx: discord.ApplicationContext,
 
     await ctx.respond(embed=embed)
 
+@bot.slash_command(name="dink", description="Use this command and I'll walk you through setting up the dink plugin!")
+async def dink(ctx: discord.ApplicationContext):
+    await ctx.respond("Check your direct messages! I've sent you step by step instructions to set up the dink plugin.")
+    stepone_image = discord.File("images/dink/step1.png")
+    await ctx.author.send("## Step 1\nInstall the dink plugin", file=stepone_image)
+    await ctx.author.send("## Step 2\nOpen this link: https://github.com/AlmostEvil665/Danbot2.0/blob/main/dink_settings.txt")
+    stepthree_image = discord.File("images/dink/step3.png")
+    await ctx.author.send("## Step 3\nClick \"Copy raw file\"", file=stepthree_image)
+    stepfour_image = discord.File("images/dink/step4.png")
+    await ctx.author.send("## Step 4\nIn game chat type \"::dinkimport\"", file=stepfour_image)
+    stepfive_image = discord.File("images/dink/step5.png")
+    await ctx.author.send("## Step 5\nIn the game chat channel you should see the following message (Note: you do not need to close and open the plugin settings panel despite what the message in chat says)", file=stepfive_image)
+    await ctx.author.send("## Done\nYou should be all set now. If you have any questions reach out to clan leadership")
+
+
+@bot.slash_command(name="submit_a_tile", description="Use this command and I'll walk you through manually submitting a tile for approval")
+async def submit_a_tile(ctx: discord.ApplicationContext):
+    await ctx.respond("Check your direct messages! I've sent you step by step instructions to manually submit a tile")
+    await ctx.author.send("## Step 1\nUpload an image of you completing the tile to your team text channel")
+    step_two_image = discord.File("images/submit/step2.png")
+    await ctx.author.send("## Step 2\nRight click the image, mouse over apps and select \"submit_a_tile\"", file=step_two_image)
+    step_three_image = discord.File("images/submit/step3.png")
+    await ctx.author.send("## Step 3\nFill out the form with your in game name, team name, and the name of the tile. These fields must be exactly correct (not case sensitive)", file=step_three_image)
+    step_four_image = discord.File("images/submit/step4.png")
+    await ctx.author.send("## Step 4\nCheck the confirmation page and if all the data looks correct then click \"Yes\" to send your request to clan leadership.", file=step_four_image)
+    await ctx.author.send("## Step 5\nWait for clan leadership to check your request and approve it")
 
 @bot.slash_command(name="team", description="Get a bunch of interesting data about a team!")
 async def team(ctx: discord.ApplicationContext,
@@ -540,6 +566,82 @@ async def team(ctx: discord.ApplicationContext,
 async def dbg(ctx: discord.ApplicationContext):
     await ctx.respond(str(bingo))
 
+
+@bot.slash_command(name="help", description="Provides help information for all commands")
+async def help_command(ctx: discord.ApplicationContext):
+
+    player_help_string = (
+                    "**/leaderboard** - Show the current leaderboard ranking both players and teams performance\n"
+                    "**/team** - Show the performance of a specific team. This includes drops, kc, gp earned, etc\n"
+                    "**/player** - Show the performance of a specific player. this includes drops, kc, gp earned, etc\n"
+                    "**/rename_player** - This is used to change a players in game name\n"
+                    "**/board** - Show your current progress on the bingo board\n"
+                    "**/dink** - Run this command and I'll help you set up the Dink plugin\n"
+                    "**/submit_a_tile** - Run this command and I'll help you manually submit a tile which requires approval by clan leadership. You'll have to use this command for any tiles I can't track automatically\n")
+
+
+    mod_help_string = ("# Bingo Management\n"
+                       "**/bingo_start** - Starts tracking player data for the bingo. Use this command when the bingo begins\n"
+                       "**/bingo_stop** - Stops tracking player data for the bingo. Use this command when the bingo ends\n"
+                       "**/bingo_reset** - Resets **ALL** bingo data. Tiles, players, teams, points, etc will be wiped!\n"
+                       "# Team Management\n"
+                       "**/add_team** - Adds a new team to the bingo\n"
+                       "**/remove_team** - Removes a team from the bingo\n"
+                       "**/rename_team** - Renames a team\n"
+                       "**/set_team_channel** - Sets the text channel for a given team. I will message updates on their progress during the bingo in their respective chat channels.\n"
+                       "# Player Management\n"
+                       "**/add_player** - Adds a player to a given team in the bingo\n"
+                       "**/remove_player** - Removes a player from a given team in the bingo\n"
+                       "# Tile Management\n"
+                       "**/add_collection_tile** - Adds a collection tile. A collection tile is a bingo tile that requires a collection of items to be gathered before the tile is complete (eg: complete the soul reaper axe as a team)\n"
+                       "**/add_drop_tile** - Adds a drop tile. A drop tile is a bingo tile that requires one of a set of items to drop (eg: Elidinis ward/Osmuntens fang\n"
+                       "**/add_kc_tile** - Adds a kc tile. A kc tile is a bingo tile that requires a certain amount of boss kc to complete (eg: Kill mole 200 times\n"
+                       "**/add_niche_tile** - Adds a niche tile. A niche tile is a bingo tile that is too niche for the bot to track automatically. This will be tracked by users submitting and admins checking submissions with /requests\n"
+                       "# Failsafe Commands\n"
+                       "**/award_points** - Awards points to a given team and optionally a player\n"
+                       "**/unaward_points** - Removes points from a given team and optionally a player\n"
+                       "**/award_tile** - Manually awards a tile to a given team and optionally a player if the bot makes a mistake\n"
+                       "**/unaward_tile** - Unawards a tile from a given team and optionally a player if the bot makes a mistake\n")
+
+    # Create an embed object for a rich response
+    embed = discord.Embed(title="Bot Commands", description="Here are the commands you can use with this bot:", color=discord.Color.nitro_pink())
+
+    # Add fields to the embed for each command
+    if ctx.author.guild_permissions.manage_webhooks:
+        embed.add_field(name="/bingo_start", value="Start tracking player data for the bingo. Use this command when the bingo begins", inline=False)
+        embed.add_field(name="/bingo_reset", value="Resets ALL bingo data. Tiles, players, teams, points, etc will be wiped!", inline=False)
+        embed.add_field(name="/bingo_stop", value="Stop tracking player data for the bingo. Use this command when the bingo ends", inline=False)
+        embed.add_field(name="/add_team", value="Adds a new team to the bingo!", inline=False)
+        embed.add_field(name="/remove_team", value="Removes a team from the bingo", inline=False)
+        embed.add_field(name="/rename_team", value="Renames a team", inline=False)
+        embed.add_field(name="/set_team_channel", value="Set the text channel for a given team. We will message updates on their progress during the bingo in their respective chat channels", inline=False)
+        embed.add_field(name="/add_player", value="Adds a player to a team in the bingo!", inline=False)
+        embed.add_field(name="/remove_player", value="Removes a player from the bingo", inline=False)
+        embed.add_field(name="/requests", value="Check if any tiles have been submitted for review. This is necessary for all *niche* tiles", inline=False)
+        embed.add_field(name="/add_collection_tile", value="Adds a collection tile. A collection tile is a bingo tile that requires a collection of items to be gathered before the tile is complete (eg: complete the soul reaper axe as a team)", inline=False)
+        embed.add_field(name="/add_drop_tile", value="Adds a drop tile. A drop tile is a bingo tile that requires one of a set of items to drop (eg: Elidinis ward/Osmuntens fang)", inline=False)
+        embed.add_field(name="/add_kc_tile", value="Adds a kc tile. A kc tile is a bingo tile that requires a certain amount of boss kc to complete (eg: Kill mole 200 times", inline=False)
+        embed.add_field(name="/add_niche_tile", value="Adds a niche tile. A niche tile is a bingo tile that is too niche for the bot to track automatically. This will be tracked by users submitting and admins checking submissions with /requests", inline=False)
+        embed.add_field(name="/award_points", value="Awards points to a given team and optionally a player", inline=False)
+        embed.add_field(name="/award_tile", value="Manually awards a tile to a given team and optionally a player if the bot makes a mistake", inline=False)
+        embed.add_field(name="/unaward_points", value="Removes points from a given team and optionally a player", inline=False)
+        embed.add_field(name="/unaward_tile", value="Unawards a tile from a given team and optionally a player if the bot makes a mistake", inline=False)
+
+    embed.add_field(name="/leaderboard", value="Show the current leaderboard ranking both players and teams performance", inline=False)
+    embed.add_field(name="/team", value="Show the performance of a specific team. This includes drops, kc, gp earned, etc", inline=False)
+    embed.add_field(name="/player", value="Show the performance of a specific player. this includes drops, kc, gp earned, etc", inline=False)
+    embed.add_field(name="/rename_player", value="This is used to rename a players ign", inline=False)
+    embed.add_field(name="/board", value="Show your current progress on the bingo board", inline=False)
+
+
+    # Send the embed in the response
+    if ctx.author.guild_permissions.manage_webhooks:
+        await ctx.respond("# Danbot Commands\n")
+        await send_large_message(ctx, player_help_string + mod_help_string)
+
+    else:
+        await ctx.respond("# Danbot Commands\n")
+        await ctx.respond(player_help_string)
 
 @bot.slash_command(name="default", description="This creates a default bingo for testing purposes only")
 @default_permissions(manage_webhooks=True)
