@@ -6,6 +6,7 @@ import bingo as bingo_class
 import re
 import json
 import pickle
+import os
 from discord.ext import tasks, commands
 import datetime
 import asyncio
@@ -23,6 +24,34 @@ class MyBot(commands.Bot):
         with open('bingo.pkl', 'wb') as f:
             pickle.dump(bingo, f)
         print(f"Successfully backed up at {datetime.datetime.now()}")
+
+        # Get the current date and time
+        now = datetime.datetime.now()
+
+        # Format the filename
+        filename = f"pickle-{now.month:02d}-{now.day:02d}-{now.hour:02d}.pkl"
+
+        # Ensure the backups directory exists
+        os.makedirs('backups', exist_ok=True)
+
+        # Save a copy to the backups directory
+        with open(os.path.join('backups', filename), 'wb') as f:
+            pickle.dump(bingo, f)
+        print(f"Successfully backed up to backups/{filename} at {datetime.datetime.now()}")
+
+        # Get a list of all files in the backups directory
+        files = [os.path.join('backups', f) for f in os.listdir('backups') if
+                 os.path.isfile(os.path.join('backups', f))]
+
+        # Sort the files by creation time
+        files.sort(key=lambda x: os.path.getmtime(x))
+
+        # Delete files if there are more than 24
+        while len(files) > 24:
+            os.remove(files[0])
+            del files[0]
+
+        print(f"Deleted a backup over 24 hours old...")
 
     @my_background_task.before_loop
     async def before_my_background_task(self):
@@ -53,6 +82,11 @@ bot.guilds.append(1216228320807485511)
 async def team_names(ctx: discord.AutocompleteContext):
     return bingo.get_team_names()
 
+async def rollback_names(ctx: discord.AutocompleteContext):
+    directory = "backups"
+    filenames = os.listdir(directory)
+
+    return filenames
 
 async def boss_names(ctx: discord.AutocompleteContext):
     return ["Abyssal Sire", "Alchemical Hydra", "Artio", "Barrows Chests", "Bryophyta", "Calvar\'ion", "Callisto",
@@ -93,6 +127,16 @@ async def on_ready():
 async def sync(ctx: discord.ApplicationContext):
     await bot.sync_commands()
     await ctx.respond("Forcing command sync")
+
+@bot.slash_command(name="rollback", description="Rollback the memory state of the bot to a specific date and time")
+@default_permissions(manage_webhooks=True)
+async def rollback(ctx: discord.ApplicationContext,
+                   backup_filename: discord.Option(str, "Which file would you like to rollback to?", autocomplete=discord.utils.basic_autocomplete(rollback_names))):
+    response = await ctx.respond("Loading backup...")
+    global bingo
+    with open(f'./backups/{backup_filename}', 'rb') as f:
+        pickle.dump(bingo, f)
+    await response.edit_original_response(content="Loaded backup data!")
 
 @bot.slash_command(name="save", description="Save the current state of the bot")
 @default_permissions(manage_webhooks=True)
@@ -344,6 +388,13 @@ async def add_collection_tile(ctx: discord.ApplicationContext,
                               repetition: discord.Option(int, "How many times can this tile be copmleted?")):
     bingo.add_collection_tile(tile_name, point_value, repetition, collection)
     await ctx.respond("Collection tile added!")
+
+@bot.slash_command(name='remove_tile', description="Removes a tile based on the tile name")
+@default_permissions(manage_webhooks=True)
+async def remove_tile(ctx: discord.ApplicationContext,
+                              tile_name: discord.Option(str, "What is the tile name", autocomplete=discord.utils.basic_autocomplete(tile_names))):
+    del bingo.game_tiles[tile_name.lower()]
+    await ctx.respond("Deleted Tile")
 
 
 @bot.slash_command(name="award_tile", description="Awards a team and player a tile incase I made a mistake")
@@ -662,41 +713,12 @@ async def help_command(ctx: discord.ApplicationContext):
                        "**/add_drop_tile** - Adds a drop tile. A drop tile is a bingo tile that requires one of a set of items to drop (eg: Elidinis ward/Osmuntens fang\n"
                        "**/add_kc_tile** - Adds a kc tile. A kc tile is a bingo tile that requires a certain amount of boss kc to complete (eg: Kill mole 200 times\n"
                        "**/add_niche_tile** - Adds a niche tile. A niche tile is a bingo tile that is too niche for the bot to track automatically. This will be tracked by users submitting and admins checking submissions with /requests\n"
+                       "**/remove_tile** - Removes any tile based on the tile name."
                        "# Failsafe Commands\n"
                        "**/award_points** - Awards points to a given team and optionally a player\n"
                        "**/unaward_points** - Removes points from a given team and optionally a player\n"
                        "**/award_tile** - Manually awards a tile to a given team and optionally a player if the bot makes a mistake\n"
                        "**/unaward_tile** - Unawards a tile from a given team and optionally a player if the bot makes a mistake\n")
-
-    # Create an embed object for a rich response
-    embed = discord.Embed(title="Bot Commands", description="Here are the commands you can use with this bot:", color=discord.Color.nitro_pink())
-
-    # Add fields to the embed for each command
-    if ctx.author.guild_permissions.manage_webhooks:
-        embed.add_field(name="/bingo_start", value="Start tracking player data for the bingo. Use this command when the bingo begins", inline=False)
-        embed.add_field(name="/bingo_reset", value="Resets ALL bingo data. Tiles, players, teams, points, etc will be wiped!", inline=False)
-        embed.add_field(name="/bingo_stop", value="Stop tracking player data for the bingo. Use this command when the bingo ends", inline=False)
-        embed.add_field(name="/add_team", value="Adds a new team to the bingo!", inline=False)
-        embed.add_field(name="/remove_team", value="Removes a team from the bingo", inline=False)
-        embed.add_field(name="/rename_team", value="Renames a team", inline=False)
-        embed.add_field(name="/set_team_channel", value="Set the text channel for a given team. We will message updates on their progress during the bingo in their respective chat channels", inline=False)
-        embed.add_field(name="/add_player", value="Adds a player to a team in the bingo!", inline=False)
-        embed.add_field(name="/remove_player", value="Removes a player from the bingo", inline=False)
-        embed.add_field(name="/requests", value="Check if any tiles have been submitted for review. This is necessary for all *niche* tiles", inline=False)
-        embed.add_field(name="/add_collection_tile", value="Adds a collection tile. A collection tile is a bingo tile that requires a collection of items to be gathered before the tile is complete (eg: complete the soul reaper axe as a team)", inline=False)
-        embed.add_field(name="/add_drop_tile", value="Adds a drop tile. A drop tile is a bingo tile that requires one of a set of items to drop (eg: Elidinis ward/Osmuntens fang)", inline=False)
-        embed.add_field(name="/add_kc_tile", value="Adds a kc tile. A kc tile is a bingo tile that requires a certain amount of boss kc to complete (eg: Kill mole 200 times", inline=False)
-        embed.add_field(name="/add_niche_tile", value="Adds a niche tile. A niche tile is a bingo tile that is too niche for the bot to track automatically. This will be tracked by users submitting and admins checking submissions with /requests", inline=False)
-        embed.add_field(name="/award_points", value="Awards points to a given team and optionally a player", inline=False)
-        embed.add_field(name="/award_tile", value="Manually awards a tile to a given team and optionally a player if the bot makes a mistake", inline=False)
-        embed.add_field(name="/unaward_points", value="Removes points from a given team and optionally a player", inline=False)
-        embed.add_field(name="/unaward_tile", value="Unawards a tile from a given team and optionally a player if the bot makes a mistake", inline=False)
-
-    embed.add_field(name="/leaderboard", value="Show the current leaderboard ranking both players and teams performance", inline=False)
-    embed.add_field(name="/team", value="Show the performance of a specific team. This includes drops, kc, gp earned, etc", inline=False)
-    embed.add_field(name="/player", value="Show the performance of a specific player. this includes drops, kc, gp earned, etc", inline=False)
-    embed.add_field(name="/rename_player", value="This is used to rename a players ign", inline=False)
-    embed.add_field(name="/board", value="Show your current progress on the bingo board", inline=False)
 
 
     # Send the embed in the response
@@ -777,8 +799,8 @@ async def on_message(message: Message) -> None:
                 f"{player.name} was killed by RyGuy",
                 f":rat: sit rat :rat:",
                 f"{player.name} fell asleep probably... :sleeping:",
-                f"{player.name} is dead. Is anyone surpised?"
-                f"Typical."
+                f"{player.name} is dead. Is anyone surpised?",
+                f"{player.name} is dead. Typical."
             ]
 
             embed = discord.Embed(
@@ -791,7 +813,7 @@ async def on_message(message: Message) -> None:
                 embed = discord.Embed(
                     title=f"{player.name} died!",
                     description=f"{player.name} is cosplaying Toortl--- oh wait thats actually toortles. Better luck next time buddy",
-                    color=discord.Colour.dark_red()
+                    color=discord.Colour.brand_red()
                 )
 
             embed.set_image(url=image_link)
