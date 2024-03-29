@@ -718,7 +718,8 @@ async def help_command(ctx: discord.ApplicationContext):
                        "**/award_points** - Awards points to a given team and optionally a player\n"
                        "**/unaward_points** - Removes points from a given team and optionally a player\n"
                        "**/award_tile** - Manually awards a tile to a given team and optionally a player if the bot makes a mistake\n"
-                       "**/unaward_tile** - Unawards a tile from a given team and optionally a player if the bot makes a mistake\n")
+                       "**/unaward_tile** - Unawards a tile from a given team and optionally a player if the bot makes a mistake\n"
+                       "**/rollback** - Rollsback the bot's memory up to 24 hours prior\n")
 
 
     # Send the embed in the response
