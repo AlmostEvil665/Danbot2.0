@@ -662,7 +662,7 @@ async def team(ctx: discord.ApplicationContext,
     embed.add_field(name="Total Deaths", value=f"{team.deaths} deaths", inline=True)
     embed.add_field(name="MVP", value=f"{tiles_player.name} with {tiles_player.tiles_completed} tiles completed!", inline=False)
     embed.add_field(name="Team Thrall", value=f"{deaths_player.name} with {deaths_player.deaths} deaths!", inline=False)
-    embed.add_field(name="Top G", value=f"{gold_player.name} with {gold_player.name} gold gained!", inline=False)
+    embed.add_field(name="Top G", value=f"{gold_player.name} with {gold_player.gp_gained} gold gained!", inline=False)
 
     # Player Rankings
     players = team.members.values()
