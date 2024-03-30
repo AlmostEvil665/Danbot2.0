@@ -88,9 +88,9 @@ class Player:
         self.gp_gained = 0
         self.team = team
         self.deaths = 0
+        self.tiles_completed = 0
         self.killcount = defaultdict(int)
         self.drops = defaultdict(zero_tuple)
-
 
 
     def add_death(self):

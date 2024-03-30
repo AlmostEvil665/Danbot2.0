@@ -642,9 +642,27 @@ async def team(ctx: discord.ApplicationContext,
         color=discord.Colour.yellow()
     )
 
+    most_tiles, tiles_player = 0, None
+    most_deaths, deaths_player = 0, None
+    most_gold, gold_player = 0, None
+
+    for member in team.members.values():
+        if member.tiles_completed > most_tiles:
+            most_tiles = member.tiles_completed
+            tiles_player = member
+        if member.deaths > most_deaths:
+            most_deaths = member.deaths
+            deaths_player = member
+        if member.gp_gained > most_gold:
+            most_gold = member.gp_gained
+            gold_player = member
+
     embed.add_field(name="Points Gained", value=f"{team.points} points", inline=True)
     embed.add_field(name="Gold Gained", value=f"{team.gp_gained} gold", inline=True)
     embed.add_field(name="Total Deaths", value=f"{team.deaths} deaths", inline=True)
+    embed.add_field(name="MVP", value=f"{tiles_player.name} with {tiles_player.tiles_completed} tiles completed!", inline=False)
+    embed.add_field(name="Team Thrall", value=f"{deaths_player.name} with {deaths_player.deaths} deaths!", inline=False)
+    embed.add_field(name="Top G", value=f"{gold_player.name} with {gold_player.name} gold gained!", inline=False)
 
     # Player Rankings
     players = team.members.values()
@@ -662,8 +680,8 @@ async def team(ctx: discord.ApplicationContext,
     drop_rankings = "```\n"
     sorted_drops = sorted(team.drops.items(), key=lambda item: item[1][1], reverse=True)
     for key, value in sorted_drops:
-        spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])}")
-        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])}\n"
+        spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])})")
+        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])}\n)"
         if len(drop_rankings) + len(result) > 1021:
             break
         drop_rankings += result
@@ -682,6 +700,14 @@ async def team(ctx: discord.ApplicationContext,
         kc_rankings += result
     kc_rankings += "```"
     embed.add_field(name="Kill count", value=kc_rankings, inline=False)
+
+
+    embed.add_field(name="Points Gained", value=f"{team.points} points", inline=True)
+    embed.add_field(name="Gold Gained", value=f"{team.gp_gained} gold", inline=True)
+    embed.add_field(name="Total Deaths", value=f"{team.deaths} deaths", inline=True)
+    embed.add_field(name="MVP", value=f"{tiles_player.name} with {tiles_player.tiles_completed} tiles completed!", inline=False)
+    embed.add_field(name="Team Thrall", value=f"{deaths_player.name} with {deaths_player.deaths} deaths!", inline=False)
+    embed.add_field(name="Top G", value=f"{gold_player.name} with {gold_player.name} gold gained!", inline=False)
 
     await ctx.respond(embed=embed)
 
@@ -735,24 +761,10 @@ async def help_command(ctx: discord.ApplicationContext):
     if ctx.author.guild_permissions.manage_webhooks:
         await ctx.respond("# Danbot Commands\n")
         await send_large_message(ctx, player_help_string + mod_help_string)
-
     else:
         await ctx.respond("# Danbot Commands\n")
         await ctx.respond(player_help_string)
 
-@bot.slash_command(name="default", description="This creates a default bingo for testing purposes only")
-@default_permissions(manage_webhooks=True)
-async def default(ctx: discord.ApplicationContext):
-    await new_team(ctx, "uwu")
-    await set_team_channel(ctx, "uwu", 1217159356601208904)
-    await new_player(ctx, "Danbis", "uwu")
-    await new_player(ctx, "Ahyrexx", "uwu")
-    await new_player(ctx, "Toortles", "uwu")
-    await new_player(ctx, "Max uwu", "uwu")
-    await add_collection_tile(ctx, f"Ardy Coll", "Iron bolts/Iron dagger, Coins", 5, 3)
-    await add_drop_tile(ctx, "Thieving Tile", "Coin pouch", 5, 2)
-    await add_kc_tile(ctx, "Boss", "Scurrius", 5, 1, 3)
-    await add_niche_tile(ctx, "A Test Niche Tile", 5, 1)
 
 @bot.event
 async def on_message(message: Message) -> None:
@@ -784,6 +796,7 @@ async def on_message(message: Message) -> None:
                     player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
                 if tile.is_completed(drop_name, player):
                     embed = bingo.award_tile(tile.name, player.team.name, player.name)
+                    player.tiles_completed = player.tiles_completed + 1
                     channel = await bot.fetch_channel(player.team.drop_channel)
                     await channel.send(embed=embed)
         if hook_type == "kc":
@@ -797,6 +810,7 @@ async def on_message(message: Message) -> None:
             player.team.image_urls[tile.name.lower()][tile.boss_name.lower()].append(image_link)
             if tile.is_completed(player.team):
                 embed = bingo.award_tile(tile.name, player.team.name, player.name)
+                player.tiles_completed = player.tiles_completed + 1
                 channel = await bot.fetch_channel(player.team.drop_channel)
                 await channel.send(embed=embed)
 
