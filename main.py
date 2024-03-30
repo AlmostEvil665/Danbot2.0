@@ -134,7 +134,7 @@ async def rollback(ctx: discord.ApplicationContext,
                    backup_filename: discord.Option(str, "Which file would you like to rollback to?", autocomplete=discord.utils.basic_autocomplete(rollback_names))):
     response = await ctx.respond("Loading backup...")
     global bingo
-    with open(f'./backups/{backup_filename}', 'rb') as f:
+    with open(os.path.join('backups', backup_filename), 'wb') as f:
         pickle.dump(bingo, f)
     await response.edit_original_response(content="Loaded backup data!")
 
