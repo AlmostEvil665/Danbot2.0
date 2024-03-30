@@ -299,7 +299,7 @@ class RequestView(discord.ui.View):
     @discord.ui.button(label="Approve", row=0, style=discord.ButtonStyle.primary)
     async def first_button_callback(self, button, interaction):
         embed = bingo.award_tile(self.request.tile.name, self.request.team.name, self.request.player_name)
-        channel = self.bot.get_channel(self.request.team.channel)
+        channel = self.bot.get_channel(self.request.team.drop_channel)
         self.disable_all_items()
         await interaction.response.edit_message(content=f"You approved the request :white_check_mark:", embed=None, view=None)
         await channel.send("Your request was approved!", embed=embed, view=None)
@@ -404,7 +404,7 @@ async def award_tile(ctx: discord.ApplicationContext,
                      team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
                      player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names))):
     embed = bingo.award_tile(tile_name, team_name, player_name)
-    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].channel)
+    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].drop_channel)
     await channel.send(embed=embed)
     await ctx.respond("Tile awarded! Check their team channel to make sure they got the points")
 
@@ -432,7 +432,7 @@ async def award_points(ctx: discord.ApplicationContext,
     if player_name != "":
         bingo.teams[team_name.lower()].members[player_name.lower()].points_gained += points
     bingo.teams[team_name.lower()].points += points
-    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].channel)
+    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].drop_channel)
     await channel.send(f"Congratulations {team_name}, you have been awarded {points} points by leadership!")
     await ctx.respond(f"Awarded {team_name} {points} points!")
 
@@ -448,18 +448,27 @@ async def unaward_points(ctx:discord.ApplicationContext,
     bingo.teams[team_name.lower()].points -= points
     await ctx.respond(f"We removed {team_name}'s points but we think it's best you explain to them why this happened. If this was a technical failure on the bot's side please message danbis and explain what happened")
 
-@bot.slash_command(name="set_team_channel", description="Sets the text channel for any given team")
+@bot.slash_command(name="set_team_channel", description="Sets the drop channel for any given team")
 @default_permissions(manage_webhooks=True)
-async def set_team_channel(ctx: discord.ApplicationContext,
+async def set_drop_channel(ctx: discord.ApplicationContext,
                            team_name: discord.Option(str, "What team are we setting the team channel for?", autocomplete=discord.utils.basic_autocomplete(team_names)),
                            channel_id: discord.Option(str, description="Copy and paste the Channel ID here")
                            ):
     team = bingo.teams[team_name.lower()]
     team.set_channel(int(channel_id))
-    await ctx.respond(f"Set team channel successfuly! Check the team channel for my introduction")
-    await utils.send_channel(bot, team.channel,
+    await ctx.respond(f"Set team drop channel successfuly! Check the team channel for my introduction")
+    await utils.send_channel(bot, team.drop_channel,
                              "Welcome to the bingo! Type /help for a list of cool and useful commands")
 
+@bot.slash_command(name="set_death_channel", description="Sets the death channel for any given team")
+@default_permissions(manage_webhooks=True)
+async def set_death_channel(ctx: discord.ApplicationContext,
+                           team_name: discord.Option(str, "What team are we setting the team channel for?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+                           channel_id: discord.Option(str, description="Copy and paste the Channel ID here")
+                           ):
+    team = bingo.teams[team_name.lower()]
+    team.death_channel  = int(channel_id)
+    await ctx.respond(f"Set team death channel successfuly!")
 
 async def send_large_message(ctx, result):
     while len(result) > 500:
@@ -775,7 +784,7 @@ async def on_message(message: Message) -> None:
                     player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
                 if tile.is_completed(drop_name, player):
                     embed = bingo.award_tile(tile.name, player.team.name, player.name)
-                    channel = message.guild.get_channel(player.team.channel)
+                    channel = await bot.fetch_channel(player.team.drop_channel)
                     await channel.send(embed=embed)
         if hook_type == "kc":
             boss = re.findall(r'\[(.*?)\]', message.embeds[0].description.lower().split('\n')[2])[0].lower()
@@ -788,7 +797,7 @@ async def on_message(message: Message) -> None:
             player.team.image_urls[tile.name.lower()][tile.boss_name.lower()].append(image_link)
             if tile.is_completed(player.team):
                 embed = bingo.award_tile(tile.name, player.team.name, player.name)
-                channel = message.guild.get_channel(player.team.channel)
+                channel = await bot.fetch_channel(player.team.drop_channel)
                 await channel.send(embed=embed)
 
         if hook_type == "Death":
@@ -819,7 +828,7 @@ async def on_message(message: Message) -> None:
 
             embed.set_image(url=image_link)
 
-            channel = message.guild.get_channel(player.team.channel)
+            channel = await bot.fetch_channel(player.team.death_channel)
             await channel.send(embed=embed)
             print(f"{player.name} has died. What a noob")
 

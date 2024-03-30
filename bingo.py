@@ -121,7 +121,8 @@ class Team:
         self.name = name
         self.members = {}
         self.points = 0.0
-        self.channel = 0
+        self.drop_channel = 0
+        self.death_channel = 0
         self.deaths = 0
         self.killcount = defaultdict(int)
         self.drops = defaultdict(zero_tuple)
@@ -152,7 +153,7 @@ class Team:
         del self.players[player_name.lower()]
 
     def set_channel(self, channel_id: int):
-        self.channel = channel_id
+        self.drop_channel = channel_id
 
     def add_gp(self, value):
         self.gp_gained = self.gp_gained + value
