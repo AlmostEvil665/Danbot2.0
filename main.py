@@ -642,9 +642,9 @@ async def team(ctx: discord.ApplicationContext,
         color=discord.Colour.yellow()
     )
 
-    most_tiles, tiles_player = 0, None
-    most_deaths, deaths_player = 0, None
-    most_gold, gold_player = 0, None
+    most_tiles, tiles_player = 0, team.members.values()[0]
+    most_deaths, deaths_player = 0, team.members.values()[0]
+    most_gold, gold_player = 0, team.members.values()[0]
 
     for member in team.members.values():
         if member.tiles_completed > most_tiles:
