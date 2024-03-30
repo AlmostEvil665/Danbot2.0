@@ -130,3 +130,5 @@ dmypy.json
 
 # Config with our token
 config.json
+
+*.pkl
