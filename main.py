@@ -456,7 +456,7 @@ async def award_tile(ctx: discord.ApplicationContext,
                      team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
                      player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names))):
     embed = bingo.award_tile(tile_name, team_name, player_name)
-    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].drop_channel)
+    channel = await bot.fetch_channel(bingo.teams[team_name.lower()].drop_channel)
     await channel.send(embed=embed)
     await ctx.respond("Tile awarded! Check their team channel to make sure they got the points")
 
@@ -484,7 +484,7 @@ async def award_points(ctx: discord.ApplicationContext,
     if player_name != "":
         bingo.teams[team_name.lower()].members[player_name.lower()].points_gained += points
     bingo.teams[team_name.lower()].points += points
-    channel = ctx.guild.get_channel(bingo.teams[team_name.lower()].drop_channel)
+    channel = await bot.fetch_channel(bingo.teams[team_name.lower()].drop_channel)
     await channel.send(f"Congratulations {team_name}, you have been awarded {points} points by leadership!")
     await ctx.respond(f"Awarded {team_name} {points} points!")
 
