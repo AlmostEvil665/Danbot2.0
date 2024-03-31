@@ -657,13 +657,6 @@ async def team(ctx: discord.ApplicationContext,
             most_gold = member.gp_gained
             gold_player = member
 
-    embed.add_field(name="Points Gained", value=f"{team.points} points", inline=True)
-    embed.add_field(name="Gold Gained", value=f"{team.gp_gained} gold", inline=True)
-    embed.add_field(name="Total Deaths", value=f"{team.deaths} deaths", inline=True)
-    embed.add_field(name="MVP", value=f"{tiles_player.name} with {tiles_player.tiles_completed} tiles completed!", inline=False)
-    embed.add_field(name="Team Thrall", value=f"{deaths_player.name} with {deaths_player.deaths} deaths!", inline=False)
-    embed.add_field(name="Top G", value=f"{gold_player.name} with {gold_player.gp_gained} gold gained!", inline=False)
-
     # Player Rankings
     players = team.members.values()
     player_rankings = "```\n"
@@ -748,7 +741,7 @@ async def help_command(ctx: discord.ApplicationContext):
                        "**/add_drop_tile** - Adds a drop tile. A drop tile is a bingo tile that requires one of a set of items to drop (eg: Elidinis ward/Osmuntens fang\n"
                        "**/add_kc_tile** - Adds a kc tile. A kc tile is a bingo tile that requires a certain amount of boss kc to complete (eg: Kill mole 200 times\n"
                        "**/add_niche_tile** - Adds a niche tile. A niche tile is a bingo tile that is too niche for the bot to track automatically. This will be tracked by users submitting and admins checking submissions with /requests\n"
-                       "**/remove_tile** - Removes any tile based on the tile name."
+                       "**/remove_tile** - Removes any tile based on the tile name.\n"
                        "# Failsafe Commands\n"
                        "**/award_points** - Awards points to a given team and optionally a player\n"
                        "**/unaward_points** - Removes points from a given team and optionally a player\n"
