@@ -118,7 +118,7 @@ class KcTile:
         self.completion_count = defaultdict(int)
 
     def progress(self, team):
-        return  f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times.\n You have {team.killcount[self.boss_name.lower()]}/{self.kc_required} killcount needed to complete this tile"
+        return  f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times.\n You have {team.killcount[self.boss_name.lower()]%self.kc_required}/{self.kc_required} killcount needed to complete this tile"
 
     def is_completed(self, team):
         return team.killcount[self.boss_name.lower()] >= self.kc_required + self.kc_required * self.completion_count[
