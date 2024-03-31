@@ -674,7 +674,7 @@ async def team(ctx: discord.ApplicationContext,
     sorted_drops = sorted(team.drops.items(), key=lambda item: item[1][1], reverse=True)
     for key, value in sorted_drops:
         spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])})")
-        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])}\n)"
+        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])})\n"
         if len(drop_rankings) + len(result) > 1021:
             break
         drop_rankings += result
