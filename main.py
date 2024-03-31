@@ -400,6 +400,23 @@ async def add_drop_tile(ctx: discord.ApplicationContext,
         await ctx.respond(f"An error occurred. If you know what went wrong then fix it. Otherwise send this junk to "
                           f"danbis:\n {e}")
 
+@bot.slash_command(name="add_multi_drop_tile", description="A drop tile is a tile that is awarded when a drop (or any drop "
+                                                     "within a list) is achieved")
+@default_permissions(manage_webhooks=True)
+async def add_multi_drop_tile(ctx: discord.ApplicationContext,
+                        tile_name: discord.Option(str, "What is the tile name?"),
+                        drops: discord.Option(str, "What drops are possible? (Enter in format: item 1/item 2/item 3"),
+                        points: discord.Option(float, "How many points is this tile worth"),
+                        repetition: discord.Option(int, "How many times can this tile be completed?"),
+                        drops_needed: discord.Option(int, "How many times do they need to get this drop until the tile is completed?")
+                        ):
+    try:
+        bingo.add_multi_drop_tile(tile_name, drops.split('/'), points, repetition, drops_needed)
+        await ctx.respond(f"Added tile {tile_name}!")
+    except Exception as e:
+        await ctx.respond(f"An error occurred. If you know what went wrong then fix it. Otherwise send this junk to "
+                          f"danbis:\n {e}")
+
 
 @bot.slash_command(name="add_kc_tile", description="Adds a tile with a kc requirement")
 @default_permissions(manage_webhooks=True)
@@ -524,7 +541,7 @@ async def send_large_message(ctx, result):
 
 @bot.slash_command(name="board", description="See the bingo board for your team")
 async def board(ctx: discord.ApplicationContext,
-                team_name: discord.Option(str, "Which teams board would you like to see?", autocomplete=team_names)):
+                team_name: discord.Option(str, "Which teams board would you like to see?", autocomplete=discord.utils.basic_autocomplete(team_names))):
 
     if BINGO_TRACKING:
         result_str = ""
@@ -543,7 +560,13 @@ async def board(ctx: discord.ApplicationContext,
 
 
 
-
+@bot.slash_command(name="progress", description="Get your current progress on completing any given tile")
+async def leaderboard(ctx: discord.ApplicationContext,
+                      team_name: discord.Option(str, "What team are you checking progress for?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+                      tile_name: discord.Option(str, "What tile would you like to see progress for?", autocomplete=discord.utils.basic_autocomplete(tile_names))):
+    team = bingo.teams[team_name.lower()]
+    tile = bingo.game_tiles[tile_name.lower()]
+    await ctx.respond(tile.progress(team))
 
 @bot.slash_command(name="leaderboard", description="Get the leaderboards / rankings of all the teams")
 async def leaderboard(ctx: discord.ApplicationContext):

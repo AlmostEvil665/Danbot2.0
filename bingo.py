@@ -13,6 +13,8 @@ def debug_print(obj):
 def defaultdict_int():
     return defaultdict(int)
 
+
+
 class CollectionTile:
     def __init__(self, name: str, points: float, recurrence: int, collection: list[str]):
         self.name = name
@@ -21,6 +23,22 @@ class CollectionTile:
         self.collection = collection
         self.completion_count = defaultdict(int)
         self.team_drops = defaultdict(defaultdict_int)
+
+    def progress(self, team):
+        result = (f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times.\n"
+                  f"Your current progress for the next completion: \n")
+
+        for sub_collection in self.collection:
+            found = 0
+            for item in sub_collection.split('/'):
+                if self.team_drops[team.name.lower()][item.lower()] > 0:
+                    found = found + self.team_drops[team.name.lower()][item.lower()]
+            if found <= self.completion_count[team.name.lower()]:
+                result = result + f"{item} :x:\n"
+            else:
+                result = result + f"{item} :white_check_mark:\n"
+
+        return result
 
     def is_completed(self, drop_name, player):
         print("Checking copmletion on " + str(drop_name))
@@ -61,9 +79,34 @@ class DropTile:
         self.recurrence = recurrence
         self.completion_count = defaultdict(int)
 
+    def progress(self, team):
+        return f"You have completed this tile {self.completion_count[team.name.lower]}/{self.recurrence} times"
+
     def is_completed(self, drop_name, player):
         return drop_name.lower() in [drop.lower() for drop in self.drops]
 
+
+class MultiDropTile:
+    def __init__(self, name: str, drops: list[str], points: float, recurrence: int, drops_needed: int):
+        self.name = name
+        self.drops = drops
+        self.points = points
+        self.recurrence = recurrence
+        self.completion_count = defaultdict(int)
+        self.drops_needed = drops_needed
+        self.drops_gotten = 0
+
+    def is_completed(self, drop_name, player):
+        if drop_name.lower() in [drop.lower() for drop in self.drops]:
+            self.drops_gotten = self.drops_gotten + 1
+            if self.drops_gotten == self.drops_needed:
+                self.drops_gotten = 0
+                return True
+        else:
+            return False
+
+    def progress(self, team):
+        return f"You have completed this tile {self.completion_count[team.name.lower]}/{self.recurrence} times\n You have {self.drops_gotten}/{self.drops_needed} drops needed to complete this tile"
 
 class KcTile:
     def __init__(self, name: str, boss_name: str, points: float, recurrence: int, kc_required: int):
@@ -73,6 +116,9 @@ class KcTile:
         self.recurrence = recurrence
         self.kc_required = kc_required
         self.completion_count = defaultdict(int)
+
+    def progress(self, team):
+        return  f"You have completed this tile {self.completion_count[team.name.lower]}/{self.recurrence} times.\n You have {team.killcount[self.boss_name.lower()]}/{self.kc_required} killcount needed to complete this tile"
 
     def is_completed(self, team):
         return team.killcount[self.boss_name.lower()] >= self.kc_required + self.kc_required * self.completion_count[
@@ -130,6 +176,12 @@ class Team:
         self.image_urls = defaultdict(defaultdict_liststr)
 
     def get_images(self, tile):
+        if type(tile is MultiDropTile):
+            for drop in tile.drops:
+                if self.image_urls[tile.name.lower()][drop.lower()] is not []:
+                    images = self.image_urls[tile.name.lower()][drop.lower()]
+                    del self.image_urls[tile.name.lower()][drop.lower()]
+                    return images
         if type(tile) is DropTile:
             for drop in tile.drops:
                 if self.image_urls[tile.name.lower()][drop.lower()] is not []:
@@ -221,7 +273,7 @@ class Bingo:
 
     def get_tile(self, item_name: str):
         for key, value in self.game_tiles.items():
-            if type(value) is DropTile:
+            if type(value) is DropTile or type(value) is MultiDropTile:
                 if item_name.lower() in [drop.lower() for drop in value.drops]:
                     return value
             if type(value) is CollectionTile:
@@ -274,8 +326,8 @@ class Bingo:
                     if len(image_urls) > 0:
                         embed.set_image(url=image_urls[0])
                         if type(tile) is not KcTile:
-                            embed.add_field(name="All images",
-                                            value=str(image_urls).replace('\'', '').replace('[', '').replace(']', ''))
+                            embed.add_field(name="All images (max of 5)",
+                                            value=str(image_urls[-5:]).replace('\'', '').replace('[', '').replace(']', ''))
 
                 return embed
             else:
@@ -297,7 +349,7 @@ class Bingo:
                 if type(tile) is not NicheTile:
                     image_urls = player.team.get_images(tile)
 
-                    embed.set_image(url=image_urls[0])
+                    embed.set_image(url=image_urls[-1])
 
                 return embed
         except Exception as e:
@@ -305,6 +357,9 @@ class Bingo:
 
     def add_drop_tile(self, tile_name: str, drops: list[str], points: int, recurrence: int):
         self.game_tiles[tile_name.lower()] = DropTile(tile_name, drops, points, recurrence)
+
+    def add_multi_drop_tile(self, tile_name: str, drops: list[str], points: int, recurrence: int, drops_needed: int):
+        self.game_tiles[tile_name.lower()] = MultiDropTile(tile_name, drops, points, recurrence, drops_needed)
 
     def add_kc_tile(self, tile_name, boss_name, point_value, recurrence, kc_required):
         self.game_tiles[tile_name.lower()] = KcTile(tile_name, boss_name, int(point_value), int(recurrence),
