@@ -778,6 +778,7 @@ async def help_command(ctx: discord.ApplicationContext):
 
     player_help_string = (
                     "**/leaderboard** - Show the current leaderboard ranking both players and teams performance\n"
+                    "**/progress** - Show your current progress on completing any given tile\n"
                     "**/team** - Show the performance of a specific team. This includes drops, kc, gp earned, etc\n"
                     "**/player** - Show the performance of a specific player. this includes drops, kc, gp earned, etc\n"
                     "**/rename_player** - This is used to change a players in game name\n"
@@ -801,6 +802,7 @@ async def help_command(ctx: discord.ApplicationContext):
                        "# Tile Management\n"
                        "**/add_collection_tile** - Adds a collection tile. A collection tile is a bingo tile that requires a collection of items to be gathered before the tile is complete (eg: complete the soul reaper axe as a team)\n"
                        "**/add_drop_tile** - Adds a drop tile. A drop tile is a bingo tile that requires one of a set of items to drop (eg: Elidinis ward/Osmuntens fang\n"
+                       "**/add_multi_drop_tile** - Adds a drop tile that requires you to get the drop multiple times before awarding you the tile\n"
                        "**/add_kc_tile** - Adds a kc tile. A kc tile is a bingo tile that requires a certain amount of boss kc to complete (eg: Kill mole 200 times\n"
                        "**/add_niche_tile** - Adds a niche tile. A niche tile is a bingo tile that is too niche for the bot to track automatically. This will be tracked by users submitting and admins checking submissions with /requests\n"
                        "**/remove_tile** - Removes any tile based on the tile name.\n"

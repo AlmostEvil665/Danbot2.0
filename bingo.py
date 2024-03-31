@@ -34,9 +34,9 @@ class CollectionTile:
                 if self.team_drops[team.name.lower()][item.lower()] > 0:
                     found = found + self.team_drops[team.name.lower()][item.lower()]
             if found <= self.completion_count[team.name.lower()]:
-                result = result + f"{item} :x:\n"
+                result = result + f"{sub_collection} :x:\n"
             else:
-                result = result + f"{item} :white_check_mark:\n"
+                result = result + f"{sub_collection} :white_check_mark:\n"
 
         return result
 
@@ -176,7 +176,7 @@ class Team:
         self.image_urls = defaultdict(defaultdict_liststr)
 
     def get_images(self, tile):
-        if type(tile is MultiDropTile):
+        if type(tile) is MultiDropTile:
             for drop in tile.drops:
                 if self.image_urls[tile.name.lower()][drop.lower()] is not []:
                     images = self.image_urls[tile.name.lower()][drop.lower()]
