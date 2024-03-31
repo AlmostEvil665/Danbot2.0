@@ -80,7 +80,7 @@ class DropTile:
         self.completion_count = defaultdict(int)
 
     def progress(self, team):
-        return f"You have completed this tile {self.completion_count[team.name.lower]}/{self.recurrence} times"
+        return f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times"
 
     def is_completed(self, drop_name, player):
         return drop_name.lower() in [drop.lower() for drop in self.drops]
@@ -106,7 +106,7 @@ class MultiDropTile:
             return False
 
     def progress(self, team):
-        return f"You have completed this tile {self.completion_count[team.name.lower]}/{self.recurrence} times\n You have {self.drops_gotten}/{self.drops_needed} drops needed to complete this tile"
+        return f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times\n You have {self.drops_gotten}/{self.drops_needed} drops needed to complete this tile"
 
 class KcTile:
     def __init__(self, name: str, boss_name: str, points: float, recurrence: int, kc_required: int):
