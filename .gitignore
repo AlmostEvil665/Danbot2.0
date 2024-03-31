@@ -132,3 +132,7 @@ dmypy.json
 config.json
 
 *.pkl
+
+client_secret.json
+
+civil-campaign-418902-69fab8df5857.json

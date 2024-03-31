@@ -10,16 +10,51 @@ import os
 from discord.ext import tasks, commands
 import datetime
 import asyncio
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         # The task will start when the bot starts
-        self.my_background_task.start()
+        self.create_backup.start()
+        self.update_spreadsheet.start()
+
 
     @tasks.loop(hours=1)
-    async def my_background_task(self):
+    async def update_spreadsheet(self):
+        print("Updating spreadsheet")
+        teams = bingo.teams.values()
+
+        # define the scope
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+
+        # add credentials to the account
+        creds = ServiceAccountCredentials.from_json_keyfile_name('civil-campaign-418902-69fab8df5857.json', scope)
+
+        client = gspread.authorize(creds)
+
+        sheet = client.open("Fatalis Spring Bingo 2024")
+        sheet_instance = sheet.get_worksheet(1)
+
+        # sheet_instance.update_cell(2, 2, "WOrking"
+
+        players = []
+
+        for i, team in enumerate(sorted(teams, key=lambda team: team.points, reverse=True), start=1):
+            sheet_instance.update_cell(5+i, 1, team.name)
+            sheet_instance.update_cell(5+i, 2, team.points)
+            for member in team.members.values():
+                players.append(member)
+
+        for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
+            sheet_instance.update_cell(16+i, 1, player.name)
+            sheet_instance.update_cell(16+i, 2, player.points_gained)
+            sheet_instance.update_cell(16+i, 3, utils.int_to_gp(player.gp_gained))
+
+    @tasks.loop(hours=1)
+    async def create_backup(self):
         # This is the function that will be called every hour
         with open('bingo.pkl', 'wb') as f:
             pickle.dump(bingo, f)
@@ -53,7 +88,7 @@ class MyBot(commands.Bot):
 
         print(f"Deleted a backup over 24 hours old...")
 
-    @my_background_task.before_loop
+    @create_backup.before_loop
     async def before_my_background_task(self):
         await self.wait_until_ready()  # wait until the bot logs in
         now = datetime.datetime.now()
@@ -490,17 +525,21 @@ async def send_large_message(ctx, result):
 @bot.slash_command(name="board", description="See the bingo board for your team")
 async def board(ctx: discord.ApplicationContext,
                 team_name: discord.Option(str, "Which teams board would you like to see?", autocomplete=team_names)):
-    result_str = ""
-    for tile in bingo.game_tiles.values():
-        tile_data = tile.name + " - "
-        for i in range(min(tile.completion_count[team_name.lower()], tile.recurrence)):
-            tile_data = tile_data + ":white_check_mark:"
-        for i in range(0, tile.recurrence - tile.completion_count[team_name.lower()]):
-            tile_data = tile_data + ":x:"
-        tile_data = tile_data + "\n"
-        result_str = result_str + tile_data
-    await ctx.respond("## Bingo Board\n")
-    await send_large_message(ctx, result_str)
+
+    if BINGO_TRACKING:
+        result_str = ""
+        for tile in bingo.game_tiles.values():
+            tile_data = tile.name + " - "
+            for i in range(min(tile.completion_count[team_name.lower()], tile.recurrence)):
+                tile_data = tile_data + ":white_check_mark:"
+            for i in range(0, tile.recurrence - tile.completion_count[team_name.lower()]):
+                tile_data = tile_data + ":x:"
+            tile_data = tile_data + "\n"
+            result_str = result_str + tile_data
+        await ctx.respond("## Bingo Board\n")
+        await send_large_message(ctx, result_str)
+    else:
+        await ctx.respond("Bingo hasn't started yet so I'm not going to show you the board...")
 
 
 
