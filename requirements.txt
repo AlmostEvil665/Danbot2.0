@@ -4,4 +4,4 @@ datetime
 google-api-python-client
 oauth2client
 gspread
-scypi
+scipy
