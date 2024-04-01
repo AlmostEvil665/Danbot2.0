@@ -772,6 +772,20 @@ async def team(ctx: discord.ApplicationContext,
 async def dbg(ctx: discord.ApplicationContext):
     await ctx.respond(str(bingo))
 
+@bot.slash_command(name="dryness", description="This function calculates how dry you are based on inputs")
+async def dryness(ctx: discord.ApplicationContext,
+    player_name: discord.Option(str, "What is the player name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
+    drop_chance: discord.Option(str, "The drop chance of the item, given as a fraction"),
+    boss_name: discord.Option(str, "Name of the boss you are checking dryness at", autocomplete=discord.utils.basic_autocomplete(boss_names)),
+    obtained: discord.Option(int, "Total number of drops obtained", default=0)):
+    player = None
+    for team in bingo.teams.values():
+        if player_name.lower() in team.members:
+            player = team.members[player_name.lower()]
+            break
+
+    await ctx.respond(utils.dry_calc(drop_chance, player.killcount[boss_name.lower()], obtained))
+
 
 @bot.slash_command(name="help", description="Provides help information for all commands")
 async def help_command(ctx: discord.ApplicationContext):
@@ -843,7 +857,7 @@ async def on_message(message: Message) -> None:
                     drop_name, value, quantity = utils.read_drop_data(drop)
                 except Exception as e:
                     print(e)
-                print(f"{player.name} recieved a drop {drop_name} x {quantity} ({value})")
+                print(f"{player.name} received a drop {drop_name} x {quantity} ({value})")
                 value = utils.convert_to_int(value)
                 tile = bingo.get_tile(drop_name)
                 player.add_drop(drop_name, int(quantity), int(value))
