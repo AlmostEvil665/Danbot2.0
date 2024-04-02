@@ -900,7 +900,7 @@ async def on_message(message: Message) -> None:
                     break
         if hook_type == "kc":
             boss = re.findall(r'\[(.*?)\]', message.embeds[0].description.lower().split('\n')[2])[0].lower()
-            tile = bingo.get_tile(boss)
+            tile = bingo.get_tile(boss)[0]
             player.add_kc(boss)
 
             print(f"{player.name} killed {boss}")
