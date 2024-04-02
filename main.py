@@ -879,7 +879,7 @@ async def on_message(message: Message) -> None:
                 AWARDED_TILE = False
                 for tile in tiles:
                     if tile is None:
-                        continue
+                        return
                     elif tile.completion_count[player.team.name.lower()] >= tile.recurrence:
                         player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
                         continue
@@ -892,7 +892,8 @@ async def on_message(message: Message) -> None:
                         await channel.send(embed=embed)
                         AWARDED_TILE = True
                         break
-                if not AWARDED_TILE:
+                if not AWARDED_TILE and len(tiles) > 0:
+                    tile = tiles[-1]
                     embed = bingo.repeat_tile(tile.name, player.team.name, player.name)
                     channel = await bot.fetch_channel(player.team.drop_channel)
                     await channel.send(embed=embed)
