@@ -131,7 +131,7 @@ async def boss_names(ctx: discord.AutocompleteContext):
             "Grotesque Guardians", "Hespori", "Kalphite Queen", "King Black Dragon", "Kraken", "Kree'Arra",
             "K'ril Tsutsaroth", "Mimic", "Nex", "Nightmare", "Phosani's Nightmare", "Obor", "Phantom Muspah",
             "Sarachnis", "Scorpia", "Scurrius", "Skotizo", "Spindel", "Tempoross", "The Gauntlet",
-            "The Corrupted Gauntlet", "The Leviathan", "The Whisperer", "Theatre of Blood",
+            "The Corrupted Gauntlet", "Leviathan", "Whisperer", "Theatre of Blood",
             "Theatre of Blood: Hard Mode", "Thermonuclear Smoke Devil", "Tombs of Amascut",
             "Tombs of Amascut: Expert Mode", "TzKal-Zuk", "TzTok-Jad", "Vardorvis", "Venenatis", "Vet'ion", "Vorkath",
             "Wintertodt", "Zalcano", "Zulrah"]
@@ -846,7 +846,7 @@ async def on_message(message: Message) -> None:
             print("No image url provided. Skipping this hook callback")
             return
         message_data = message.embeds[0].description.split('\n')
-        hook_type, player_name, player = message_data[0], message_data[1], bingo.get_player(message_data[1])
+        hook_type, player_name, player = message_data[0], message_data[1], bingo.get_player(message_data[1].lower())
         if player is None:
             return
 
@@ -859,17 +859,30 @@ async def on_message(message: Message) -> None:
                     print(e)
                 print(f"{player.name} received a drop {drop_name} x {quantity} ({value})")
                 value = utils.convert_to_int(value)
-                tile = bingo.get_tile(drop_name)
+                tiles = bingo.get_tile(drop_name)
                 player.add_drop(drop_name, int(quantity), int(value))
                 player.add_gp(value)
-                if tile is None: continue
-                else:
-                    player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
-                if tile.is_completed(drop_name, player):
-                    embed = bingo.award_tile(tile.name, player.team.name, player.name)
-                    player.tiles_completed = player.tiles_completed + 1
+                AWARDED_TILE = False
+                for tile in tiles:
+                    if tile is None:
+                        continue
+                    elif tile.completion_count[player.team.name.lower()] >= tile.recurrence:
+                        player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
+                        continue
+                    else:
+                        player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
+                    if tile.is_completed(drop_name, player):
+                        embed = bingo.award_tile(tile.name, player.team.name, player.name)
+                        player.tiles_completed = player.tiles_completed + 1
+                        channel = await bot.fetch_channel(player.team.drop_channel)
+                        await channel.send(embed=embed)
+                        AWARDED_TILE = True
+                        break
+                if not AWARDED_TILE:
+                    embed = bingo.repeat_tile(tile.name, player.team.name, player.name)
                     channel = await bot.fetch_channel(player.team.drop_channel)
                     await channel.send(embed=embed)
+                    break
         if hook_type == "kc":
             boss = re.findall(r'\[(.*?)\]', message.embeds[0].description.lower().split('\n')[2])[0].lower()
             tile = bingo.get_tile(boss)

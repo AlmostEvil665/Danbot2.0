@@ -272,21 +272,23 @@ class Bingo:
         return tile_names
 
     def get_tile(self, item_name: str):
+        values = []
         for key, value in self.game_tiles.items():
             if type(value) is DropTile or type(value) is MultiDropTile:
                 if item_name.lower() in [drop.lower() for drop in value.drops]:
-                    return value
+                    values.append(value)
             if type(value) is CollectionTile:
                 for sub_collection in value.collection:
                     for subc_item in sub_collection.split('/'):
                         if item_name.lower() in subc_item.lower():
-                            return value
+                            values.append(value)
             if type(value) is KcTile:
                 if item_name.lower() in value.boss_name.lower():
-                    return value
+                    values.append(value)
             if type(value) is NicheTile:
                 if item_name.lower() is value.name.lower():
-                    return value
+                    values.append(value)
+        return values
 
     def delete_tile(self, name):
         del self.game_tiles[name.lower()]
@@ -300,58 +302,63 @@ class Bingo:
         team.points = team.points - tile.points
         tile.completion_count[team.name.lower()] = tile.completion_count[team.name.lower()] - 1
 
+    def repeat_tile(self, tile_name: str, team_name: str, player_name: str):
+        try:
+            tile = self.game_tiles[tile_name.lower()]
+            team = self.teams[team_name.lower()]
+            player = team.members[player_name.lower()]
 
+            tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] + 1
+
+            descriptions = [f"{player.name} forgot we’ve already done that tile, or are you just showing off?",
+                            f"Going for a repeat performance, are we {player.name}?",
+                            f"{player.name} really loves that tile I guess...",
+                            f"What team are you on {player.name}?",
+                            f"Bro wyd. We've done this tile {tile.completion_count[team_name.lower()]} already {player.name}."
+                            ]
+
+            embed = discord.Embed(
+                title="Time wasted! You've already done this tile...",
+                description=random.choice(descriptions),
+                color=discord.Colour.dark_grey()
+            )
+
+            if type(tile) is not NicheTile:
+                image_urls = player.team.get_images(tile)
+
+                embed.set_image(url=image_urls[-1])
+
+            return embed
+        except Exception as e:
+            print(e)
     def award_tile(self, tile_name: str, team_name: str, player_name: str):
         try:
             tile = self.game_tiles[tile_name.lower()]
             team = self.teams[team_name.lower()]
             player = team.members[player_name.lower()]
 
-            if tile.completion_count[team_name.lower()] < int(tile.recurrence):
-                team.points = team.points + int(tile.points)
-                player.points_gained = player.points_gained + int(tile.points)
-                tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] + 1
+            team.points = team.points + int(tile.points)
+            player.points_gained = player.points_gained + int(tile.points)
+            tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] + 1
 
-                embed = discord.Embed(
-                    title="Tile completed!",
-                    description=tile.name,
-                    color=discord.Colour.green()
-                )
-                embed.add_field(name="Points Gained", value=f"{tile.points} points", inline=True)
-                embed.add_field(name="Player Name", value=f"{player.name}", inline=True)
+            embed = discord.Embed(
+                title="Tile completed!",
+                description=tile.name,
+                color=discord.Colour.green()
+            )
+            embed.add_field(name="Points Gained", value=f"{tile.points} points", inline=True)
+            embed.add_field(name="Player Name", value=f"{player.name}", inline=True)
 
-                if type(tile) is not NicheTile:
-                    image_urls = player.team.get_images(tile)
+            if type(tile) is not NicheTile:
+                image_urls = player.team.get_images(tile)
 
-                    if len(image_urls) > 0:
-                        embed.set_image(url=image_urls[0])
-                        if type(tile) is not KcTile:
-                            embed.add_field(name="All images (max of 5)",
-                                            value=str(image_urls[-5:]).replace('\'', '').replace('[', '').replace(']', ''))
+                if len(image_urls) > 0:
+                    embed.set_image(url=image_urls[0])
+                    if type(tile) is not KcTile:
+                        embed.add_field(name="All images (max of 5)",
+                                        value=str(image_urls[-5:]).replace('\'', '').replace('[', '').replace(']', ''))
 
-                return embed
-            else:
-                tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] + 1
-
-                descriptions = [f"{player.name} forgot we’ve already done that tile, or are you just showing off?",
-                               f"Going for a repeat performance, are we {player.name}?",
-                               f"{player.name} really loves that tile I guess...",
-                               f"What team are you on {player.name}?",
-                               f"Bro wyd. We've done this tile {tile.completion_count[team_name.lower()]} already {player.name}."
-                ]
-
-                embed = discord.Embed(
-                    title="Time wasted! You've already done this tile...",
-                    description=random.choice(descriptions),
-                    color=discord.Colour.dark_grey()
-                )
-
-                if type(tile) is not NicheTile:
-                    image_urls = player.team.get_images(tile)
-
-                    embed.set_image(url=image_urls[-1])
-
-                return embed
+            return embed
         except Exception as e:
             print(e)
 
