@@ -139,5 +139,5 @@ def calc(chanceTxt, kc, obtained):
     luck = 0.0
     for i in range(obtained + 1):
         luck = luck + comb(kc, i) * math.pow(chance, i) * math.pow(1 - chance, kc - i)
-    return f"You killed {kc} monsters for an item with a {chanceTxt} ({100 * chance}%) drop chance. You had a:\n* {100 * luck}% chance of getting {obtained} drops or fewer\n* {100 * (1.0 - luck)}% chance of getting more than {obtained} drops.\n \n{flavourText((1.0 - luck) * 100, obtained)}"
+    return f"You killed {kc} monsters for an item with a {chanceTxt} ({round(100 * chance,2)}%) drop chance. You had a:\n* {round(100 * luck, 2)}% chance of getting {obtained} drops or fewer\n* {round(100 * (1.0 - luck),2)}% chance of getting more than {obtained} drops.\n \n{flavourText((1.0 - luck) * 100, obtained)}"
 
