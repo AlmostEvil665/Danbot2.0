@@ -900,12 +900,15 @@ async def on_message(message: Message) -> None:
                     break
         if hook_type == "kc":
             boss = re.findall(r'\[(.*?)\]', message.embeds[0].description.lower().split('\n')[2])[0].lower()
-            tile = bingo.get_tile(boss)[0]
+            tiles = bingo.get_tile(boss)
             player.add_kc(boss)
-
             print(f"{player.name} killed {boss}")
 
-            if tile is None: return
+            tile = None
+            if len(tiles) > 0:
+                tile = tiles[0]
+            else:
+                return
             player.team.image_urls[tile.name.lower()][tile.boss_name.lower()].append(image_link)
             if tile.is_completed(player.team):
                 embed = bingo.award_tile(tile.name, player.team.name, player.name)
