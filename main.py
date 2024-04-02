@@ -441,6 +441,20 @@ async def add_collection_tile(ctx: discord.ApplicationContext,
     bingo.add_collection_tile(tile_name, point_value, repetition, collection)
     await ctx.respond("Collection tile added!")
 
+@bot.slash_command(name='tie_tiles', description="Makes it so when one tile is completed it also completes the other. ie: The tiles are tied")
+@default_permissions(manage_webhooks=True)
+async def add_collection_tile(ctx: discord.ApplicationContext,
+                              tile_name1: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
+                              tile_name2: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names))):
+    tile1 = bingo.game_tiles[tile_name1.lower()]
+    tile2 = bingo.game_tiles[tile_name2.lower()]
+
+    tile1.tied_tiles.append(tile2)
+    tile2.tied_tiles.append(tile1)
+
+    await ctx.respond("Tiles tied!")
+
+
 @bot.slash_command(name='remove_tile', description="Removes a tile based on the tile name")
 @default_permissions(manage_webhooks=True)
 async def remove_tile(ctx: discord.ApplicationContext,

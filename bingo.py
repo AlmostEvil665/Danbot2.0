@@ -23,6 +23,7 @@ class CollectionTile:
         self.collection = collection
         self.completion_count = defaultdict(int)
         self.team_drops = defaultdict(defaultdict_int)
+        self.tied_tiles = []
 
     def progress(self, team):
         result = (f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times.\n"
@@ -61,6 +62,7 @@ class NicheTile:
         self.points = points
         self.recurrence = recurrence
         self.completion_count = defaultdict(int)
+        self.tied_tiles = []
 
 
 class TileRequest:
@@ -69,6 +71,7 @@ class TileRequest:
         self.image_url = image_url
         self.team = team
         self.player = player
+        self.tied_tiles = []
 
 
 class DropTile:
@@ -78,6 +81,7 @@ class DropTile:
         self.points = points
         self.recurrence = recurrence
         self.completion_count = defaultdict(int)
+        self.tied_tiles = []
 
     def progress(self, team):
         return f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times"
@@ -95,6 +99,7 @@ class MultiDropTile:
         self.completion_count = defaultdict(int)
         self.drops_needed = drops_needed
         self.drops_gotten = 0
+        self.tied_tiles = []
 
     def is_completed(self, drop_name, player):
         if drop_name.lower() in [drop.lower() for drop in self.drops]:
@@ -116,6 +121,7 @@ class KcTile:
         self.recurrence = recurrence
         self.kc_required = kc_required
         self.completion_count = defaultdict(int)
+        self.tied_tiles = []
 
     def progress(self, team):
         return  f"You have completed this tile {self.completion_count[team.name.lower()]}/{self.recurrence} times.\n You have {team.killcount[self.boss_name.lower()]%self.kc_required}/{self.kc_required} killcount needed to complete this tile"
@@ -340,6 +346,9 @@ class Bingo:
             team.points = team.points + int(tile.points)
             player.points_gained = player.points_gained + int(tile.points)
             tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] + 1
+
+            for tied_tile in tile.tied_tiles:
+                tied_tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] + 1
 
             embed = discord.Embed(
                 title="Tile completed!",
