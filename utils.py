@@ -85,8 +85,8 @@ def choose(n, k):
 def flavourText(x, obtained):
     flavourTexts = [
         [-1, 1, "You are some sort of sentient water being you're so not-dry. How'd you even do this?"],
-        [1, 10, "You're a higher % water than a watermelon.",
-         "Or you would be if you had gotten any drops. But you didn't."],
+        [1, 10, "Being this spooned would be grounds for dismissal.",
+         "You might keep this drop to yourself. For your own sake"],
         [10, 20, "Only ironmen can be this lucky.", "But you got no drops, so I guess you're not an ironman."],
         [20, 30, "🥄 Spooned 🥄", "j/k you got no drops"],
         [30, 40, "Your friends will be jealous.", "...If you got any drops."],
@@ -105,7 +105,7 @@ def flavourText(x, obtained):
         [99.5, 99.9, "The vacuum of space has more activity than your drop log."],
         [99.9, 99.99,
          "Wow that's so rare! Seems like it's bugged. We tweeted @JagexAsh for you, we're sure he'll get to the bottom of it in the next 24 hours."],
-        [99.99, 1000, "Did you forget to talk to [[Oziach]]?"]
+        [99.99, 1000, "Did you forget to talk to Oziach?"]
 
     ]
     for i in flavourTexts:

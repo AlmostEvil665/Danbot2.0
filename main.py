@@ -788,17 +788,11 @@ async def dbg(ctx: discord.ApplicationContext):
 
 @bot.slash_command(name="dryness", description="This function calculates how dry you are based on inputs")
 async def dryness(ctx: discord.ApplicationContext,
-    player_name: discord.Option(str, "What is the player name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
+    kill_count: discord.Option(int, "How many times have you killed the boss?"),
     drop_chance: discord.Option(str, "The drop chance of the item, given as a fraction"),
-    boss_name: discord.Option(str, "Name of the boss you are checking dryness at", autocomplete=discord.utils.basic_autocomplete(boss_names)),
     obtained: discord.Option(int, "Total number of drops obtained", default=0)):
-    player = None
-    for team in bingo.teams.values():
-        if player_name.lower() in team.members:
-            player = team.members[player_name.lower()]
-            break
 
-    await ctx.respond(utils.dry_calc(drop_chance, player.killcount[boss_name.lower()], obtained))
+    await ctx.respond(utils.dry_calc(drop_chance, kill_count, obtained))
 
 
 @bot.slash_command(name="help", description="Provides help information for all commands")
