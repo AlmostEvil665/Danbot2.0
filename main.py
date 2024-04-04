@@ -786,13 +786,25 @@ async def team(ctx: discord.ApplicationContext,
 async def dbg(ctx: discord.ApplicationContext):
     await ctx.respond(str(bingo))
 
-@bot.slash_command(name="dryness", description="This function calculates how dry you are based on inputs")
+@bot.slash_command(name="dryness", description="Calculates how dry you are based on inputs")
 async def dryness(ctx: discord.ApplicationContext,
     kill_count: discord.Option(int, "You can get your killcount from /team or /player"),
     drop_chance: discord.Option(str, "The drop chance of the item, given as a fraction"),
     obtained: discord.Option(int, "Total number of drops obtained", default=0)):
 
     await ctx.respond(utils.dry_calc(drop_chance, kill_count, obtained))
+
+@bot.slash_command(name="teamdryness", description="Checks how dry your team is")
+async def teamdryness(ctx: discord.ApplicationContext,
+    team_name: discord.Option(str, "What is the player name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
+    drop_chance: discord.Option(str, "The drop chance of the item, given as a fraction"),
+    boss_name: discord.Option(str, "Name of the boss you are checking dryness at", autocomplete=discord.utils.basic_autocomplete(boss_names)),
+    obtained: discord.Option(int, "Total number of drops obtained", default=0)):
+    kc = 0
+    for player in bingo.teams[team_name.lower()].members.values():
+        kc = kc + player.killcount[boss_name.lower()]
+
+    await ctx.respond(utils.dry_calc(drop_chance, kc, obtained))
 
 
 @bot.slash_command(name="help", description="Provides help information for all commands")
