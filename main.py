@@ -131,7 +131,7 @@ async def boss_names(ctx: discord.AutocompleteContext):
             "Grotesque Guardians", "Hespori", "Kalphite Queen", "King Black Dragon", "Kraken", "Kree'Arra",
             "K'ril Tsutsaroth", "Mimic", "Nex", "Nightmare", "Phosani's Nightmare", "Obor", "Phantom Muspah",
             "Sarachnis", "Scorpia", "Scurrius", "Skotizo", "Spindel", "Tempoross", "The Gauntlet",
-            "The Corrupted Gauntlet", "The Leviathan", "The Whisperer", "Theatre of Blood",
+            "The Corrupted Gauntlet", "Leviathan", "Whisperer", "Theatre of Blood",
             "Theatre of Blood: Hard Mode", "Thermonuclear Smoke Devil", "Tombs of Amascut",
             "Tombs of Amascut: Expert Mode", "TzKal-Zuk", "TzTok-Jad", "Vardorvis", "Venenatis", "Vet'ion", "Vorkath",
             "Wintertodt", "Zalcano", "Zulrah"]
@@ -440,6 +440,20 @@ async def add_collection_tile(ctx: discord.ApplicationContext,
                               repetition: discord.Option(int, "How many times can this tile be copmleted?")):
     bingo.add_collection_tile(tile_name, point_value, repetition, collection)
     await ctx.respond("Collection tile added!")
+
+@bot.slash_command(name='tie_tiles', description="Makes it so when one tile is completed it also completes the other. ie: The tiles are tied")
+@default_permissions(manage_webhooks=True)
+async def add_collection_tile(ctx: discord.ApplicationContext,
+                              tile_name1: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
+                              tile_name2: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names))):
+    tile1 = bingo.game_tiles[tile_name1.lower()]
+    tile2 = bingo.game_tiles[tile_name2.lower()]
+
+    tile1.tied_tiles.append(tile2)
+    tile2.tied_tiles.append(tile1)
+
+    await ctx.respond("Tiles tied!")
+
 
 @bot.slash_command(name='remove_tile', description="Removes a tile based on the tile name")
 @default_permissions(manage_webhooks=True)
@@ -774,17 +788,11 @@ async def dbg(ctx: discord.ApplicationContext):
 
 @bot.slash_command(name="dryness", description="Calculates how dry you are based on inputs")
 async def dryness(ctx: discord.ApplicationContext,
-    player_name: discord.Option(str, "What is the player name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
+    kill_count: discord.Option(int, "You can get your killcount from /team or /player"),
     drop_chance: discord.Option(str, "The drop chance of the item, given as a fraction"),
-    boss_name: discord.Option(str, "Name of the boss you are checking dryness at", autocomplete=discord.utils.basic_autocomplete(boss_names)),
     obtained: discord.Option(int, "Total number of drops obtained", default=0)):
-    player = None
-    for team in bingo.teams.values():
-        if player_name.lower() in team.members:
-            player = team.members[player_name.lower()]
-            break
 
-    await ctx.respond(utils.dry_calc(drop_chance, player.killcount[boss_name.lower()], obtained))
+    await ctx.respond(utils.dry_calc(drop_chance, kill_count, obtained))
 
 @bot.slash_command(name="teamdryness", description="Checks how dry your team is")
 async def teamdryness(ctx: discord.ApplicationContext,
@@ -853,81 +861,107 @@ async def help_command(ctx: discord.ApplicationContext):
 async def on_message(message: Message) -> None:
     if message.author.bot and message.author.name == "Captain Hook" and BINGO_TRACKING:
         try:
-            image_link = message.embeds[0].image.url
-        except:
-            print("No image url provided. Skipping this hook callback")
-            return
-        message_data = message.embeds[0].description.split('\n')
-        hook_type, player_name, player = message_data[0], message_data[1], bingo.get_player(message_data[1])
-        if player is None:
-            return
+            try:
+                image_link = message.embeds[0].image.url
+            except:
+                print("No image url provided. Skipping this hook callback")
+                return
+            message_data = message.embeds[0].description.split('\n')
+            hook_type, player_name, player = message_data[0], message_data[1], bingo.get_player(message_data[1].lower())
+            if player is None:
+                return
 
-        if hook_type == "Loot Drop":
-            drop_data = message_data[2:]
-            for drop in drop_data:
-                try:
-                    drop_name, value, quantity = utils.read_drop_data(drop)
-                except Exception as e:
-                    print(e)
-                print(f"{player.name} received a drop {drop_name} x {quantity} ({value})")
-                value = utils.convert_to_int(value)
-                tile = bingo.get_tile(drop_name)
-                player.add_drop(drop_name, int(quantity), int(value))
-                player.add_gp(value)
-                if tile is None: continue
+            if hook_type == "Loot Drop":
+                drop_data = message_data[2:]
+                for drop in drop_data:
+                    try:
+                        drop_name, value, quantity = utils.read_drop_data(drop)
+                    except Exception as e:
+                        print(e)
+                    print(f"{player.name} received a drop {drop_name} x {quantity} ({value})")
+                    value = utils.convert_to_int(value)
+                    tiles = bingo.get_tile(drop_name)
+                    player.add_drop(drop_name, int(quantity), int(value))
+                    player.add_gp(value)
+                    AWARDED_TILE = False
+                    for tile in tiles:
+                        if tile is None:
+                            return
+                        elif tile.completion_count[player.team.name.lower()] >= tile.recurrence:
+                            player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
+                            continue
+                        else:
+                            player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
+                        if tile.is_completed(drop_name, player):
+                            embed = bingo.award_tile(tile.name, player.team.name, player.name)
+                            player.tiles_completed = player.tiles_completed + 1
+                            channel = await bot.fetch_channel(player.team.drop_channel)
+                            await channel.send(embed=embed)
+                            AWARDED_TILE = True
+                            break
+                    if not AWARDED_TILE and len(tiles) > 0:
+                        tile = tiles[-1]
+                        embed = bingo.repeat_tile(tile.name, player.team.name, player.name)
+                        channel = await bot.fetch_channel(player.team.drop_channel)
+                        await channel.send(embed=embed)
+                        break
+            if hook_type == "kc":
+                boss = re.findall(r'\[(.*?)\]', message.embeds[0].description.lower().split('\n')[2])[0].lower()
+                tiles = bingo.get_tile(boss)
+                player.add_kc(boss)
+                print(f"{player.name} killed {boss}")
+
+                tile = None
+                if len(tiles) > 0:
+                    tile = tiles[0]
                 else:
-                    player.team.image_urls[tile.name.lower()][drop_name.lower()].append(image_link)
-                if tile.is_completed(drop_name, player):
+                    return
+                player.team.image_urls[tile.name.lower()][tile.boss_name.lower()].append(image_link)
+                if tile.is_completed(player.team):
                     embed = bingo.award_tile(tile.name, player.team.name, player.name)
                     player.tiles_completed = player.tiles_completed + 1
                     channel = await bot.fetch_channel(player.team.drop_channel)
                     await channel.send(embed=embed)
-        if hook_type == "kc":
-            boss = re.findall(r'\[(.*?)\]', message.embeds[0].description.lower().split('\n')[2])[0].lower()
-            tile = bingo.get_tile(boss)
-            player.add_kc(boss)
 
-            print(f"{player.name} killed {boss}")
+            if hook_type == "Death":
+                player.add_death()
 
-            if tile is None: return
-            player.team.image_urls[tile.name.lower()][tile.boss_name.lower()].append(image_link)
-            if tile.is_completed(player.team):
-                embed = bingo.award_tile(tile.name, player.team.name, player.name)
-                player.tiles_completed = player.tiles_completed + 1
-                channel = await bot.fetch_channel(player.team.drop_channel)
-                await channel.send(embed=embed)
+                descriptions = [
+                    f":wing: {player.name} is in the arms of an angel :( :wing:",
+                    f"{player.name} is cosplaying Toortles",
+                    f"{player.name} was killed by RyGuy",
+                    f":rat: sit rat :rat:",
+                    f"{player.name} fell asleep probably... :sleeping:",
+                    f"{player.name} is dead. Is anyone surpised?",
+                    f"{player.name} is dead. Typical."
+                ]
 
-        if hook_type == "Death":
-            player.add_death()
-
-            descriptions = [
-                f":wing: {player.name} is in the arms of an angel :( :wing:",
-                f"{player.name} is cosplaying Toortles",
-                f"{player.name} was killed by RyGuy",
-                f":rat: sit rat :rat:",
-                f"{player.name} fell asleep probably... :sleeping:",
-                f"{player.name} is dead. Is anyone surpised?",
-                f"{player.name} is dead. Typical."
-            ]
-
-            embed = discord.Embed(
-                title=f"{player.name} died!",
-                description=random.choice(descriptions),
-                color=discord.Colour.brand_red()
-            )
-
-            if player.name.lower() == "toortles":
                 embed = discord.Embed(
                     title=f"{player.name} died!",
-                    description=f"{player.name} is cosplaying Toortl--- oh wait thats actually toortles. Better luck next time buddy",
+                    description=random.choice(descriptions),
                     color=discord.Colour.brand_red()
                 )
 
-            embed.set_image(url=image_link)
+                if player.name.lower() == "toortles":
+                    embed = discord.Embed(
+                        title=f"{player.name} died!",
+                        description=f"{player.name} is cosplaying Toortl--- oh wait thats actually toortles. Better luck next time buddy",
+                        color=discord.Colour.brand_red()
+                    )
 
-            channel = await bot.fetch_channel(player.team.death_channel)
-            await channel.send(embed=embed)
-            print(f"{player.name} has died. What a noob")
+                embed.set_image(url=image_link)
+
+                channel = await bot.fetch_channel(player.team.death_channel)
+                await channel.send(embed=embed)
+                print(f"{player.name} has died. What a noob")
+        except Exception as e:
+            print(f"============Error============\n"
+                  f"Error {type(e)} thrown. Caused by the following hook:\n"
+                  f"{message.embeds[0].description}"
+                  f"\n"
+                  f"\n"
+                  f"==========Error Log==========\n"
+                  f"{e}")
 
 
 bot.run(token=TOKEN)
