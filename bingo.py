@@ -307,6 +307,8 @@ class Bingo:
         player.points_gained = player.points_gained - tile.points
         team.points = team.points - tile.points
         tile.completion_count[team.name.lower()] = tile.completion_count[team.name.lower()] - 1
+        for tied_tile in tile.tied_tiles:
+            tied_tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] - 1
 
     def repeat_tile(self, tile_name: str, team_name: str, player_name: str):
         try:

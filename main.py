@@ -33,25 +33,30 @@ class MyBot(commands.Bot):
         # add credentials to the account
         creds = ServiceAccountCredentials.from_json_keyfile_name('civil-campaign-418902-69fab8df5857.json', scope)
 
-        client = gspread.authorize(creds)
+        try:
+            client = gspread.authorize(creds)
 
-        sheet = client.open("Fatalis Spring Bingo 2024")
-        sheet_instance = sheet.get_worksheet(1)
+            sheet = client.open("Fatalis Spring Bingo 2024")
+            sheet_instance = sheet.get_worksheet(1)
 
-        # sheet_instance.update_cell(2, 2, "WOrking"
+            # sheet_instance.update_cell(2, 2, "WOrking"
 
-        players = []
+            players = []
 
-        for i, team in enumerate(sorted(teams, key=lambda team: team.points, reverse=True), start=1):
-            sheet_instance.update_cell(5+i, 1, team.name)
-            sheet_instance.update_cell(5+i, 2, team.points)
-            for member in team.members.values():
-                players.append(member)
+            for i, team in enumerate(sorted(teams, key=lambda team: team.points, reverse=True), start=1):
+                sheet_instance.update_cell(5+i, 1, team.name)
+                sheet_instance.update_cell(5+i, 2, team.points)
+                for member in team.members.values():
+                    players.append(member)
 
-        for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
-            sheet_instance.update_cell(16+i, 1, player.name)
-            sheet_instance.update_cell(16+i, 2, player.points_gained)
-            sheet_instance.update_cell(16+i, 3, utils.int_to_gp(player.gp_gained))
+            for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
+                sheet_instance.update_cell(16+i, 1, player.name)
+                sheet_instance.update_cell(16+i, 2, player.points_gained)
+                sheet_instance.update_cell(16+i, 3, utils.int_to_gp(player.gp_gained))
+        except Exception as e:
+            print(f"Updating Spreadsheet failed...\n"
+                  f"=============Error============\n"
+                  f"{e}")
 
     @tasks.loop(hours=1)
     async def create_backup(self):
