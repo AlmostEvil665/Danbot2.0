@@ -100,7 +100,7 @@ def flavourText(x, obtained):
         [74, 85, "oof"],
         [85, 90, "A national emergency has been declared in your drop log."],
         [90, 95, "Right, time to post on reddit."],
-        [95, 99, "You after being this dry: [[File:Skeleton.png|80x80px]]"],
+        [95, 99, "You after being this dry: :skull: "],
         [99, 99.5, "You are so dry you have collapsed into the dry singularity. The dryularity, if you will."],
         [99.5, 99.9, "The vacuum of space has more activity than your drop log."],
         [99.9, 99.99,
