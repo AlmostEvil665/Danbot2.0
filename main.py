@@ -809,7 +809,7 @@ async def team(ctx: discord.ApplicationContext,
     sorted_kc = sorted(team.killcount.items(), key=lambda item: item[1], reverse=True)
     for key, value in sorted_kc:
         spaces_needed = 56 - len(f"{key}{value}")
-        result = f"{ftext + fred}{key}{fend}{' ' * spaces_needed}{ftext + fred}{value}\n{fend}"
+        result = f"{ftext + fred}{key}{fend}{' ' * spaces_needed}{ftext + fblue}{value}\n{fend}"
         if len(kc_rankings) + len(result) > 1021:
             break
         kc_rankings += result
