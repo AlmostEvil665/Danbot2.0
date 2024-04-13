@@ -1,6 +1,6 @@
 import random
 import discord
-from discord import default_permissions, Message
+from discord import default_permissions, Message, guild_only
 import utils
 import bingo as bingo_class
 import re
@@ -12,6 +12,20 @@ import datetime
 import asyncio
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+
+ftext = "\u001b["
+
+fnormal = "0;"
+fbolt = "1;"
+funderline = "4;"
+
+fred = "31m"
+fgreen = "32m"
+fyellow = "33m"
+fblue = "34m"
+fwhite = "37m"
+
+fend = ftext + "0m"
 
 class MyBot(commands.Bot):
     def __init__(self, *args, **kwargs):
@@ -163,12 +177,14 @@ async def on_ready():
 
 
 @bot.slash_command(name="sync", description="say hello to the bot")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def sync(ctx: discord.ApplicationContext):
     await bot.sync_commands()
     await ctx.respond("Forcing command sync")
 
 @bot.slash_command(name="rollback", description="Rollback the memory state of the bot to a specific date and time")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def rollback(ctx: discord.ApplicationContext,
                    backup_filename: discord.Option(str, "Which file would you like to rollback to?", autocomplete=discord.utils.basic_autocomplete(rollback_names))):
@@ -179,6 +195,7 @@ async def rollback(ctx: discord.ApplicationContext,
     await response.edit_original_response(content="Loaded backup data!")
 
 @bot.slash_command(name="save", description="Save the current state of the bot")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def save(ctx: discord.ApplicationContext):
     response = await ctx.respond("Saving bingo...")
@@ -186,6 +203,7 @@ async def save(ctx: discord.ApplicationContext):
         pickle.dump(bingo, f)
     await response.edit_original_response(content="Saved all bingo data!")
 @bot.slash_command(name="load", description="Load the previous state of the bot")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def load(ctx: discord.ApplicationContext):
     global bingo
@@ -196,6 +214,7 @@ async def load(ctx: discord.ApplicationContext):
 
 
 @bot.slash_command(name="bingo_start", description="Start tracking player data for the bingo")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def bingo_start(ctx: discord.ApplicationContext):
     global BINGO_TRACKING
@@ -203,6 +222,7 @@ async def bingo_start(ctx: discord.ApplicationContext):
     await ctx.respond("Bingo tracking started...")
 
 @bot.slash_command(name="bingo_reset", description="Resets ALL bingo data. Tiles, players, teams, points, etc will be wiped!")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def bingo_start(ctx: discord.ApplicationContext):
     global bingo
@@ -210,6 +230,7 @@ async def bingo_start(ctx: discord.ApplicationContext):
     await ctx.respond("Bingo data reset...")
 
 @bot.slash_command(name="bingo_stop", description="Stop tracking player data for the bingo")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def bingo_stop(ctx: discord.ApplicationContext):
     global BINGO_TRACKING
@@ -217,6 +238,7 @@ async def bingo_stop(ctx: discord.ApplicationContext):
     await ctx.respond("Bingo tracking stopped...")
 
 @bot.slash_command(name="add_team", description="Adds a new team to the bingo!")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def new_team(ctx: discord.ApplicationContext,
                    team_name: discord.Option(str, "what is the team name?")):
@@ -225,6 +247,7 @@ async def new_team(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name="add_player", description="Adds a player to a team in the bingo!")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def new_player(ctx: discord.ApplicationContext,
                      player_name: discord.Option(str, "What player are we adding?"),
@@ -250,6 +273,7 @@ async def rename_player(ctx: discord.ApplicationContext,
     await ctx.respond(f"Successfully renamed {old_name} to {new_name}")
 
 @bot.slash_command(name="rename_team", description="Renames a team if they decide they want a different name")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def rename_team(ctx: discord.ApplicationContext,
                       old_name: discord.Option(str, "What is your old team name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
@@ -262,6 +286,7 @@ async def rename_team(ctx: discord.ApplicationContext,
     await ctx.respond(f"Successfully renamed {old_name} to {new_name}")
 
 @bot.slash_command(name="remove_player", description="Removes a player from the bingo")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def remove_player(ctx: discord.ApplicationContext,
                         player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names))):
@@ -271,6 +296,7 @@ async def remove_player(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name="remove_team", description="Removes a team from the bingo")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def remove_team(ctx: discord.ApplicationContext,
                       team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names))):
@@ -353,6 +379,7 @@ class RequestView(discord.ui.View):
 
 
 @bot.slash_command(name="requests", description="Check if any requests need to be verified")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def requests(ctx: discord.ApplicationContext):
     if len(bingo.requests) > 0:
@@ -380,6 +407,7 @@ async def requests(ctx: discord.ApplicationContext):
         await ctx.respond("There are no requests available at the moment")
 
 @bot.slash_command(name="add_niche_tile", description="Add a tile which cannot be tracked by Dink.")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def add_niche_tile(ctx: discord.ApplicationContext,
                          tile_name: discord.Option(str, "What is the tile name?"),
@@ -391,6 +419,7 @@ async def add_niche_tile(ctx: discord.ApplicationContext,
 
 @bot.slash_command(name="add_drop_tile", description="A drop tile is a tile that is awarded when a drop (or any drop "
                                                      "within a list) is achieved")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def add_drop_tile(ctx: discord.ApplicationContext,
                         tile_name: discord.Option(str, "What is the tile name?"),
@@ -407,6 +436,7 @@ async def add_drop_tile(ctx: discord.ApplicationContext,
 
 @bot.slash_command(name="add_multi_drop_tile", description="A drop tile is a tile that is awarded when a drop (or any drop "
                                                      "within a list) is achieved")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def add_multi_drop_tile(ctx: discord.ApplicationContext,
                         tile_name: discord.Option(str, "What is the tile name?"),
@@ -424,6 +454,7 @@ async def add_multi_drop_tile(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name="add_kc_tile", description="Adds a tile with a kc requirement")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def add_kc_tile(ctx: discord.ApplicationContext,
                       tile_name: discord.Option(str, "What is the tile name?"),
@@ -437,6 +468,7 @@ async def add_kc_tile(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name='add_collection_tile', description="Adds a tile with a collection requirement")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def add_collection_tile(ctx: discord.ApplicationContext,
                               tile_name: discord.Option(str, "What is the tile name?"),
@@ -447,6 +479,7 @@ async def add_collection_tile(ctx: discord.ApplicationContext,
     await ctx.respond("Collection tile added!")
 
 @bot.slash_command(name='tie_tiles', description="Makes it so when one tile is completed it also completes the other. ie: The tiles are tied")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def add_collection_tile(ctx: discord.ApplicationContext,
                               tile_name1: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
@@ -461,6 +494,7 @@ async def add_collection_tile(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name='remove_tile', description="Removes a tile based on the tile name")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def remove_tile(ctx: discord.ApplicationContext,
                               tile_name: discord.Option(str, "What is the tile name", autocomplete=discord.utils.basic_autocomplete(tile_names))):
@@ -469,6 +503,7 @@ async def remove_tile(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name="award_tile", description="Awards a team and player a tile incase I made a mistake")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def award_tile(ctx: discord.ApplicationContext,
                      tile_name: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
@@ -481,6 +516,7 @@ async def award_tile(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name="unaward_tile", description="Remove a tile completion and the points from a team incase I made a mistake")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def unaward_tile(ctx: discord.ApplicationContext,
                        tile_name: discord.Option(str, "What is the tile name?", autocomplete=discord.utils.basic_autocomplete(tile_names)),
@@ -493,6 +529,7 @@ async def unaward_tile(ctx: discord.ApplicationContext,
         await ctx.respond(f"I ran into an error trying to unaward this tile. Here's a bunch of nonsense you should send to danbis.\n{e}")
 
 @bot.slash_command(name="award_points", description="Award points to a given team (and optionally specific player)")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def award_points(ctx: discord.ApplicationContext,
                        team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
@@ -508,6 +545,7 @@ async def award_points(ctx: discord.ApplicationContext,
     await ctx.respond(f"Awarded {team_name} {points} points!")
 
 @bot.slash_command(name="unaward_points", description="Remove points from a team (and optionally a specific player)")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def unaward_points(ctx:discord.ApplicationContext,
                          team_name: discord.Option(str, "What is the teams name?", autocomplete=discord.utils.basic_autocomplete(team_names)),
@@ -520,6 +558,7 @@ async def unaward_points(ctx:discord.ApplicationContext,
     await ctx.respond(f"We removed {team_name}'s points but we think it's best you explain to them why this happened. If this was a technical failure on the bot's side please message danbis and explain what happened")
 
 @bot.slash_command(name="set_team_channel", description="Sets the drop channel for any given team")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def set_drop_channel(ctx: discord.ApplicationContext,
                            team_name: discord.Option(str, "What team are we setting the team channel for?", autocomplete=discord.utils.basic_autocomplete(team_names)),
@@ -532,6 +571,7 @@ async def set_drop_channel(ctx: discord.ApplicationContext,
                              "Welcome to the bingo! Type /help for a list of cool and useful commands")
 
 @bot.slash_command(name="set_death_channel", description="Sets the death channel for any given team")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def set_death_channel(ctx: discord.ApplicationContext,
                            team_name: discord.Option(str, "What team are we setting the team channel for?", autocomplete=discord.utils.basic_autocomplete(team_names)),
@@ -599,21 +639,22 @@ async def leaderboard(ctx: discord.ApplicationContext):
             players.append(member)
 
     # Rankings
-    rankings = "```\n"
+    rankings = "```ansi\n"
     for i, team in enumerate(sorted(teams, key=lambda team: team.points, reverse=True), start=1):
-        spaces_needed = 60 - len(f"Rank {i}: {team.name[:40]}") - len(f"{team.points} points ({utils.int_to_gp(team.gp_gained)})")
+        spaces_needed = 56 - len(f"Rank {i}: {team.name[:40]}") - len(f"{team.points} points ({utils.int_to_gp(team.gp_gained)})")
         # Create the string
-        result = f"Rank {i}: {team.name[:40]}{' ' * spaces_needed}{team.points} points ({utils.int_to_gp(team.gp_gained)})\n"
+        ansi = ""
+        result = f"{ftext + fred}Rank {i}:{fend} {team.name[:40]}{' ' * spaces_needed}{ftext + fblue}{team.points} points {fend}{ftext + fgreen}({utils.int_to_gp(team.gp_gained)}){fend}\n"
         if len(rankings) + len(result) > 1021:
             break
         rankings += result
     rankings += "```"
     embed.add_field(name="Rankings", value=rankings, inline=False)
 
-    player_rankings = "```\n"
+    player_rankings = "```ansi\n"
     for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
-        spaces_needed = 60 - len(f"Rank {i}: {player.name[:40]}") - len(f"{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})")
-        result = f"Rank {i}: {player.name[:40]}{' ' * spaces_needed}{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})\n"
+        spaces_needed = 56 - len(f"Rank {i}: {player.name[:40]}") - len(f"{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})")
+        result = f"{ftext + fred}Rank {i}: {fend}{player.name[:40]}{' ' * spaces_needed}{ftext + fblue}{player.points_gained} points {fend}{ftext + fgreen}({utils.int_to_gp(player.gp_gained)})\n{fend}"
         if len(player_rankings) + len(result) > 1021:
             break
         player_rankings += result
@@ -639,11 +680,11 @@ async def player(ctx: discord.ApplicationContext,
     embed.add_field(name="Total Deaths", value=f"{player.deaths} deaths", inline=True)
 
     # Drop Rankings
-    drop_rankings = "```\n"
+    drop_rankings = "```ansi\n"
     sorted_drops = sorted(player.drops.items(), key=lambda item: item[1][1], reverse=True)
     for key, value in sorted_drops:
-        spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])})")
-        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])})\n"
+        spaces_needed = 56 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])})")
+        result = f"{ftext + fred}{value[0]} x {fend}{key}{' ' * spaces_needed}{ftext +fgreen}({utils.int_to_gp(value[1])})\n{fend}"
         if len(drop_rankings) + len(result) > 1021:
             break
         drop_rankings += result
@@ -651,11 +692,11 @@ async def player(ctx: discord.ApplicationContext,
     embed.add_field(name="Drops", value=drop_rankings, inline=False)
 
     # Kill Count Rankings
-    kc_rankings = "```\n"
+    kc_rankings = "```ansi\n"
     sorted_kc = sorted(player.killcount.items(), key=lambda item: item[1], reverse=True)
     for key, value in sorted_kc:
-        spaces_needed = 60 - len(f"{key}{value}")
-        result = f"{key}{' ' * spaces_needed}{value}\n"
+        spaces_needed = 56 - len(f"{key}{value}")
+        result = f"{ftext + fred}{key}{fend}{' ' * spaces_needed}{ftext + fblue}{value}\n{fend}"
         if len(kc_rankings) + len(result) > 1021:
             break
         kc_rankings += result
@@ -740,10 +781,10 @@ async def team(ctx: discord.ApplicationContext,
 
     # Player Rankings
     players = team.members.values()
-    player_rankings = "```\n"
+    player_rankings = "```ansi\n"
     for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
-        spaces_needed = 60 - len(f"Rank {i}: {player.name[:40]}") - len(f"{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})")
-        result = f"Rank {i}: {player.name[:40]}{' ' * spaces_needed}{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})\n"
+        spaces_needed = 56 - len(f"Rank {i}: {player.name[:40]}") - len(f"{player.points_gained} points ({utils.int_to_gp(player.gp_gained)})")
+        result = f"{ftext + fred}Rank {i}:{fend} {player.name[:40]}{' ' * spaces_needed}{ftext + fblue}{player.points_gained} points {fend}{ftext + fgreen}({utils.int_to_gp(player.gp_gained)})\n{fend}"
         if len(player_rankings) + len(result) > 1021:
             break
         player_rankings += result
@@ -751,11 +792,11 @@ async def team(ctx: discord.ApplicationContext,
     embed.add_field(name="Player Rankings", value=player_rankings, inline=False)
 
     # Drop Rankings
-    drop_rankings = "```\n"
+    drop_rankings = "```ansi\n"
     sorted_drops = sorted(team.drops.items(), key=lambda item: item[1][1], reverse=True)
     for key, value in sorted_drops:
-        spaces_needed = 60 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])})")
-        result = f"{value[0]} x {key}{' ' * spaces_needed}({utils.int_to_gp(value[1])})\n"
+        spaces_needed = 56 - len(f"{value[0]} x {key}({utils.int_to_gp(value[1])})")
+        result = f"{ftext + fred}{value[0]} x{fend} {key}{' ' * spaces_needed}{ftext + fyellow}({utils.int_to_gp(value[1])})\n{fend}"
         if len(drop_rankings) + len(result) > 1021:
             break
         drop_rankings += result
@@ -764,11 +805,11 @@ async def team(ctx: discord.ApplicationContext,
     embed.add_field(name="Drops", value=drop_rankings, inline=False)
 
     # Kill Count Rankings
-    kc_rankings = "```\n"
+    kc_rankings = "```ansi\n"
     sorted_kc = sorted(team.killcount.items(), key=lambda item: item[1], reverse=True)
     for key, value in sorted_kc:
-        spaces_needed = 60 - len(f"{key}{value}")
-        result = f"{key}{' ' * spaces_needed}{value}\n"
+        spaces_needed = 56 - len(f"{key}{value}")
+        result = f"{ftext + fred}{key}{fend}{' ' * spaces_needed}{ftext + fred}{value}\n{fend}"
         if len(kc_rankings) + len(result) > 1021:
             break
         kc_rankings += result
@@ -787,6 +828,7 @@ async def team(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name="dbg", description="This function is useful for debugging purposes")
+@guild_only()
 @default_permissions(manage_webhooks=True)
 async def dbg(ctx: discord.ApplicationContext):
     await ctx.respond(str(bingo))
@@ -813,6 +855,7 @@ async def teamdryness(ctx: discord.ApplicationContext,
 
 
 @bot.slash_command(name="help", description="Provides help information for all commands")
+@guild_only()
 async def help_command(ctx: discord.ApplicationContext):
 
     player_help_string = (
