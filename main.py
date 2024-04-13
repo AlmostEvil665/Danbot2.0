@@ -64,9 +64,9 @@ class MyBot(commands.Bot):
                     players.append(member)
 
             for i, player in enumerate(sorted(players, key=lambda player: player.points_gained, reverse=True), start=1):
-                sheet_instance.update_cell(16+i, 1, player.name)
-                sheet_instance.update_cell(16+i, 2, player.points_gained)
-                sheet_instance.update_cell(16+i, 3, utils.int_to_gp(player.gp_gained))
+                sheet_instance.update_cell(18+i, 1, player.name)
+                sheet_instance.update_cell(18+i, 2, player.points_gained)
+                sheet_instance.update_cell(18+i, 3, utils.int_to_gp(player.gp_gained))
         except Exception as e:
             print(f"Updating Spreadsheet failed...\n"
                   f"=============Error============\n"
