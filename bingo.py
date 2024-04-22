@@ -339,14 +339,15 @@ class Bingo:
             return embed
         except Exception as e:
             print(e)
+
     def award_tile(self, tile_name: str, team_name: str, player_name: str):
         try:
             tile = self.game_tiles[tile_name.lower()]
             team = self.teams[team_name.lower()]
             player = team.members[player_name.lower()]
 
-            team.points = team.points + int(tile.points)
-            player.points_gained = player.points_gained + int(tile.points)
+            team.points = team.points + float(tile.points)
+            player.points_gained = player.points_gained + float(tile.points)
             tile.completion_count[team_name.lower()] = tile.completion_count[team_name.lower()] + 1
 
             for tied_tile in tile.tied_tiles:
