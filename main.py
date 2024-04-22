@@ -161,7 +161,10 @@ async def player_names(ctx: discord.AutocompleteContext):
 
 
 async def tile_names(ctx: discord.AutocompleteContext):
-    return bingo.get_tile_names()
+    if BINGO_TRACKING:
+        return bingo.get_tile_names()
+    else:
+        return None
 
 
 async def channel_ids(ctx: discord.AutocompleteContext):
