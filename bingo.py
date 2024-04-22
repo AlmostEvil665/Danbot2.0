@@ -399,5 +399,13 @@ class Bingo:
         output += "\nTiles\n"
         for tile in self.game_tiles.values():
             output += f"\t{tile.name}: Worth {tile.points} points {tile.recurrence} times\n"
+            if type(tile) is DropTile:
+                output += f"\t\tTrigger for this tile is: {tile.drops}\n"
+            if type(tile) is MultiDropTile:
+                output += f"\t\tTrigger for this tile is: {tile.drops} {tile.drops_needed} times\n"
+            if type(tile) is CollectionTile:
+                output += f"\t\tTrigger for this tile is: {tile.collection}\n"
+            if type(tile) is KcTile:
+                output += f"\t\tTrigger for this tile is killing {tile.boss_name}\n"
 
         return output

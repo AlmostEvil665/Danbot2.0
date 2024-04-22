@@ -834,7 +834,8 @@ async def team(ctx: discord.ApplicationContext,
 @guild_only()
 @default_permissions(manage_webhooks=True)
 async def dbg(ctx: discord.ApplicationContext):
-    await ctx.respond(str(bingo))
+    await ctx.respond("# Bingo debug data")
+    await send_large_message(ctx, str(bingo))
 
 @bot.slash_command(name="dryness", description="Calculates how dry you are based on inputs")
 async def dryness(ctx: discord.ApplicationContext,
