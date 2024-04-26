@@ -64,6 +64,9 @@ class NicheTile:
         self.completion_count = defaultdict(int)
         self.tied_tiles = []
 
+    def progress(self, team):
+        return f"This tile is being tracked manually so I can't tell you you're progress :("
+
 
 class TileRequest:
     def __init__(self, tile, image_url: str, team, player):
