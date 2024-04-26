@@ -951,12 +951,12 @@ async def on_message(message: Message) -> None:
                             await channel.send(embed=embed)
                             AWARDED_TILE = True
                             break
-                    if not AWARDED_TILE and len(tiles) > 0:
-                        tile = tiles[-1]
-                        embed = bingo.repeat_tile(tile.name, player.team.name, player.name)
-                        channel = await bot.fetch_channel(player.team.drop_channel)
-                        await channel.send(embed=embed)
-                        break
+                    # if not AWARDED_TILE and len(tiles) > 0:
+                    #     tile = tiles[-1]
+                    #     embed = bingo.repeat_tile(tile.name, player.team.name, player.name)
+                    #     channel = await bot.fetch_channel(player.team.drop_channel)
+                    #     await channel.send(embed=embed)
+                    #     break
             if hook_type == "kc":
                 boss = re.findall(r'\[(.*?)\]', message.embeds[0].description.lower().split('\n')[2])[0].lower()
                 tiles = bingo.get_tile(boss)
