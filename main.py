@@ -328,9 +328,9 @@ class SubmitRequestView(discord.ui.View):
         super().__init__()
         self.bot = bot
         self.image = image
-        self.player_name = player_name
-        self.team_name = team_name
-        self.tile_name = tile_name
+        self.player_name = player_name.lower()
+        self.team_name = team_name.lower()
+        self.tile_name = tile_name.lower()
 
     @discord.ui.button(label="Yes", row=0, style=discord.ButtonStyle.primary)
     async def first_button_callback(self, button, interaction):
