@@ -314,7 +314,7 @@ async def award_drop(ctx: discord.ApplicationContext,
                       drop_name: discord.Option(str, "Must be the exact item name!!!"),
                       quantity: discord.Option(int, "How many of this item should be added?")):
     player = bingo.get_player(player_name.lower())
-    tile = bingo.get_tile(drop_name)
+    tile = bingo.get_tile(drop_name)[0]
     tile.is_completed(drop_name.lower(), player)
     player.add_drop(drop_name, quantity, 0)
     await ctx.respond(f"Succesfully added {drop_name} for {player_name}")
