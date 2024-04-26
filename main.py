@@ -306,6 +306,28 @@ async def remove_team(ctx: discord.ApplicationContext,
     del bingo.teams[team_name.lower()]
     await ctx.respond(f"Successfuly removed {team_name} from the bingo")
 
+@bot.slash_command(name="award_drop", description="Adds a drop to a specific player and team")
+@guild_only()
+@default_permissions(manage_webhooks=True)
+async def award_drop(ctx: discord.ApplicationContext,
+                      player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
+                      drop_name: discord.Option(str, "Must be the exact item name!!!"),
+                      quantity: discord.Option(int, "How many of this item should be added?")):
+    player = bingo.get_player(player_name.lower())
+    player.add_drop(drop_name, quantity)
+    await ctx.respond(f"Succesfully added {drop_name} for {player_name}")
+
+@bot.slash_command(name="unaward_drop", description="Removes a drop from a specific player and team")
+@guild_only()
+@default_permissions(manage_webhooks=True)
+async def unaward_drop(ctx: discord.ApplicationContext,
+                      player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
+                      drop_name: discord.Option(str, "Must be the exact item name!!!"),
+                       quantity: discord.Option(int, "How many of this item should be removed?")):
+    player = bingo.get_player(player_name.lower())
+    player.remove_drop(drop_name, quantity)
+    await ctx.respond(f"Succesfully removed {drop_name} for {player_name}")
+
 class SubmitRequestModal(discord.ui.Modal):
     def __init__(self, image, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
