@@ -65,7 +65,7 @@ class NicheTile:
         self.tied_tiles = []
 
     def progress(self, team):
-        return f"This tile is being tracked manually so I can't tell you you're progress :("
+        return f"This tile is being tracked manually so I can't tell you your progress :("
 
 
 class TileRequest:
