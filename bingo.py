@@ -162,16 +162,13 @@ class Player:
             self.drops[drop_name.lower()][0] + quantity, self.drops[drop_name.lower()][1] + value)
         self.team.add_drops(drop_name, quantity, value)
 
-    def remove_drop(self, drop_name, quantity):
-        # Check if the drop exists and the quantity and value to be removed are not more than what's present
-        if drop_name.lower() in self.drops and \
-                self.drops[drop_name.lower()][0] >= quantity:
-            self.drops[drop_name.lower()] = (
-                self.drops[drop_name.lower()][0] - quantity, self.drops[drop_name.lower()][1] - 0)
-            self.team.remove_drops(drop_name, quantity)
+    def remove_drop(self, drop_name):
+        # Check if the drop exists
+        if drop_name.lower() in self.drops:
+            del self.drops[drop_name.lower()]
+            self.team.remove_drops(drop_name)
         else:
-            print(
-                "Error: Cannot remove drop. Either drop does not exist or removal quantity/value is more than present.")
+            print("Error: Cannot remove drop. Drop does not exist.")
 
     def __str__(self):
         return self.name
@@ -234,12 +231,12 @@ class Team:
         self.drops[drop_name.lower()] = (
             self.drops[drop_name.lower()][0] + quantity, self.drops[drop_name.lower()][1] + value)
 
-    def remove_drops(self, drop_name, quantity):
-        # Check if the drop exists and the quantity and value to be removed are not more than what's present
-        if drop_name.lower() in self.drops and \
-                self.drops[drop_name.lower()][0] >= quantity:
-            self.drops[drop_name.lower()] = (
-                self.drops[drop_name.lower()][0] - quantity, self.drops[drop_name.lower()][1] - 0)
+    def remove_drops(self, drop_name):
+        # Check if the drop exists
+        if drop_name.lower() in self.drops:
+            del self.drops[drop_name.lower()]
+        else:
+            print("Error: Cannot remove drop. Drop does not exist.")
 
 
 class Request:
