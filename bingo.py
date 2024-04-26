@@ -168,7 +168,7 @@ class Player:
                 self.drops[drop_name.lower()][0] >= quantity:
             self.drops[drop_name.lower()] = (
                 self.drops[drop_name.lower()][0] - quantity, self.drops[drop_name.lower()][1] - 0)
-            self.team.remove_drops(drop_name, quantity, 0)
+            self.team.remove_drops(drop_name, quantity)
         else:
             print(
                 "Error: Cannot remove drop. Either drop does not exist or removal quantity/value is more than present.")
