@@ -322,10 +322,9 @@ async def award_drop(ctx: discord.ApplicationContext,
 @default_permissions(manage_webhooks=True)
 async def unaward_drop(ctx: discord.ApplicationContext,
                       player_name: discord.Option(str, "What is the players name?", autocomplete=discord.utils.basic_autocomplete(player_names)),
-                      drop_name: discord.Option(str, "Must be the exact item name!!!"),
-                       quantity: discord.Option(int, "How many of this item should be removed?")):
+                      drop_name: discord.Option(str, "Must be the exact item name!!!")):
     player = bingo.get_player(player_name.lower())
-    player.remove_drop(drop_name, quantity)
+    player.remove_drop(drop_name)
     await ctx.respond(f"Succesfully removed {drop_name} for {player_name}")
 
 class SubmitRequestModal(discord.ui.Modal):
