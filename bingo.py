@@ -42,16 +42,13 @@ class CollectionTile:
         return result
 
     def is_completed(self, drop_name, player):
-        print("Checking copmletion on " + str(drop_name))
+        print("Checking completion on " + str(drop_name))
         self.team_drops[player.team.name.lower()][drop_name.lower()] = (
                 self.team_drops[player.team.name.lower()][drop_name.lower()] + 1)
 
         for sub_collection in self.collection:
-            found = 0
-            for item in sub_collection.split('/'):
-                if self.team_drops[player.team.name.lower()][item.lower()] > 0:
-                    found = found + self.team_drops[player.team.name.lower()][item.lower()]
-            if found <= self.completion_count[player.team.name.lower()]:
+            if not any(
+                    self.team_drops[player.team.name.lower()][item.lower()] > 0 for item in sub_collection.split('/')):
                 return False
         return True
 
