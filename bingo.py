@@ -31,7 +31,8 @@ class CollectionTile:
 
         for sub_collection in self.collection:
             # Check if at least one item in the sub-collection has been found
-            if any(self.team_drops[team.name.lower()][item.lower()] > 0 for item in sub_collection.split('/')):
+            if any(self.team_drops[team.name.lower()][item.lower()] > 0 for item in
+                   map(str.lower, sub_collection.split('/'))):
                 result = result + f"{sub_collection} :white_check_mark:\n"
             else:
                 result = result + f"{sub_collection} :x:\n"
@@ -45,7 +46,7 @@ class CollectionTile:
 
         for sub_collection in self.collection:
             if not any(
-                    self.team_drops[player.team.name.lower()][item.lower()] > 0 for item in sub_collection.split('/')):
+                    self.team_drops[player.team.name.lower()][item.lower()] > 0 for item in sub_collection.lower().split('/')):
                 return False
         return True
 
