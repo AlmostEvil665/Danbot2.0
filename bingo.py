@@ -30,14 +30,11 @@ class CollectionTile:
                   f"Your current progress for the next completion: \n")
 
         for sub_collection in self.collection:
-            found = 0
-            for item in sub_collection.split('/'):
-                if self.team_drops[team.name.lower()][item.lower()] > 0:
-                    found = found + self.team_drops[team.name.lower()][item.lower()]
-            if found <= self.completion_count[team.name.lower()]:
-                result = result + f"{sub_collection} :x:\n"
-            else:
+            # Check if at least one item in the sub-collection has been found
+            if any(self.team_drops[team.name.lower()][item.lower()] > 0 for item in sub_collection.split('/')):
                 result = result + f"{sub_collection} :white_check_mark:\n"
+            else:
+                result = result + f"{sub_collection} :x:\n"
 
         return result
 
